@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "691503372148",
+    "project_id": "birdmessenger-c1785",
+    "storage_bucket": "birdmessenger-c1785.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691503372148:android:472cbdbe6503d0f0127e21",
+        "android_client_info": {
+          "package_name": "com.adreal.birdmessenger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "691503372148-3jjojlgimjb6vmv3q9i5i7kd6fn0m9nc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adreal.birdmessenger",
+            "certificate_hash": "5c89b8641398c2c4252581c4b0b4642b921489f3"
+          }
+        },
+        {
+          "client_id": "691503372148-oi0d6b4a44hlr2li5utc25aromsr87qn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvz3exclBV1nKggqaTRzQzlMg-Skj2axQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "691503372148-oi0d6b4a44hlr2li5utc25aromsr87qn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
