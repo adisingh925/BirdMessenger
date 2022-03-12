@@ -3,6 +3,7 @@ package com.adreal.birdmessenger.ViewModel
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -21,6 +22,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.squareup.okhttp.MediaType
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
@@ -28,6 +30,8 @@ import com.squareup.okhttp.RequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 
 class OnlineViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,6 +41,8 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
     private val firestore = Firebase.firestore
 
     private val realtimeDatabase = Firebase.database
+
+    private val storage = Firebase.storage
 
     val liveData = MutableLiveData<String>()
 
@@ -128,6 +134,27 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
     private fun updateMessageStatus(status : Int, id : Long) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().updateMessageStatus(status,id)
+        }
+    }
+
+    fun uploadToFirebase(uri: Uri?)
+    {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val name = System.currentTimeMillis()
+
+            val uploadTask = uri?.let { storage.reference.child("${auth.uid}/$name").putFile(it) }
+
+            uploadTask?.addOnFailureListener {
+                Log.d("File Uploading","failed")
+            }?.addOnSuccessListener {
+                storage.reference.child("${auth.uid}/$name").downloadUrl.addOnSuccessListener{
+                    Log.d("Download Url","retrieved ${it.toString()}")
+                }.addOnFailureListener{
+                    Log.d("Download Url","retrieval failed")
+                }
+                Log.d("File Uploading","success")
+            }
         }
     }
 

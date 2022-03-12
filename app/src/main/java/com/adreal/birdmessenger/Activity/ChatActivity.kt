@@ -5,14 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.*
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
@@ -22,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Connectivity.ConnectionLiveData
-import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.ViewModel.OfflineViewModel
@@ -30,9 +27,6 @@ import com.adreal.birdmessenger.ViewModel.OnlineViewModel
 import com.adreal.birdmessenger.databinding.ActivityChatBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
@@ -357,6 +351,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         if(requestCode == 2)
         {
             if(data!=null) {
+
                 val mimeType = data.data?.let { contentResolver.getType(it) }
 
                 val cursor = data.data?.let { contentResolver.query(it,null,null,null) }
@@ -366,6 +361,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
                 cursor?.moveToFirst()
 
+
                 val nameOfFile = nameIndex?.let { cursor.getString(it) }
                 val sizeOfFile = sizeIndex?.let { cursor.getLong(it) }
 
@@ -373,7 +369,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
                 Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
 
-                createDocumentModel()
+                onlineViewModel.uploadToFirebase(data.data)
             }
         }
         super.onActivityResult(requestCode, resultCode, data)

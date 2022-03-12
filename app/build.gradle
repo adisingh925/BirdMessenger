@@ -90,4 +90,7 @@ dependencies {
 
     //realtime database
     implementation 'com.google.firebase:firebase-database-ktx'
+
+    //firebase storage
+    implementation 'com.google.firebase:firebase-storage-ktx'
 }
