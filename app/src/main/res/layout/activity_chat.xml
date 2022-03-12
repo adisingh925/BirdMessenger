@@ -10,7 +10,12 @@
     <Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:background="?attr/background_color"
+        app:contentInsetLeft="0dp"
+        app:contentInsetStart="0dp"
+        app:contentInsetStartWithNavigation="0dp"
+        android:background="#303030"
+        android:navigationIcon="@drawable/back"
+        app:tint = "@color/white"
         android:layout_height="?actionBarSize"
         android:title="aditya"
         android:logo="@drawable/emoji"

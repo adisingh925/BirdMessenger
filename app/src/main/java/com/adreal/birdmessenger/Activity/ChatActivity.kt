@@ -6,10 +6,14 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
+import android.webkit.MimeTypeMap
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -190,6 +194,15 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
             }
         }
 
+        binding.attachment.setOnClickListener()
+        {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+            }
+            startActivityForResult(intent, 2)
+        }
+
         offlineViewModel.imageLiveData.observe(this)
         {
             receiverImage = it
@@ -336,5 +349,31 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         canvas.drawBitmap(bitmap, rect, rect, paint)
         bitmap.recycle()
         return output
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+        if(requestCode == 2)
+        {
+            if(data!=null) {
+                val mimeType = data.data?.let { contentResolver.getType(it) }
+
+                val cursor = data.data?.let { contentResolver.query(it,null,null,null) }
+
+                val nameIndex = cursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = cursor?.getColumnIndex(OpenableColumns.SIZE)
+
+                cursor?.moveToFirst()
+
+                val nameOfFile = nameIndex?.let { cursor.getString(it) }
+                val sizeOfFile = sizeIndex?.let { cursor.getLong(it) }
+
+                cursor?.close()
+
+                Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }

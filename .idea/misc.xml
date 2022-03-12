@@ -13,14 +13,16 @@
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/drawable/sending.xml" value="0.1485" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/drawable/sent.xml" value="0.1485" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/drawable/splash_background.xml" value="0.1445" />
-        <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/activity_chat.xml" value="0.22" />
+        <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/activity_chat.xml" value="0.16666666666666666" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/activity_main.xml" value="0.13333333333333333" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/activity_splash_screen.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/add_user_dialog.xml" value="0.16666666666666666" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/image_dialog.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/name_dialog.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/people_layout.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/receiver_document_layout.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/receiver_layout.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/sender_document_layout.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/sender_layout.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/layout/settings_activity.xml" value="0.17552083333333332" />
         <entry key="..\:/Users/adisi/AndroidStudioProjects/BirdMessenger/app/src/main/res/menu/toprightmenu.xml" value="0.17552083333333332" />
