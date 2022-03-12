@@ -10,8 +10,8 @@
     <Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
+        android:background="#303030"
         android:layout_height="?actionBarSize"
-        android:background="?attr/background_color"
         android:title="BirdMessenger"
         android:titleTextColor="?attr/font_color"
         android:subtitle="People"

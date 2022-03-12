@@ -125,7 +125,7 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun updateMessageStatus(status : String, id : Long) {
+    private fun updateMessageStatus(status : Int, id : Long) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().updateMessageStatus(status,id)
         }
@@ -153,17 +153,17 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d("FCM Response", response.toString())
                 if (response.isSuccessful) {
                     Log.d("Message Status", "successfully sent")
-                    if(json.getString("category") == "sending")
+                    if(json.getString("messageStatus") == "0")
                     {
-                        updateMessageStatus("sent",json.getString("id").toString().toLong())
+                        updateMessageStatus(1,json.getString("id").toString().toLong())
                         val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
                         currentUser.lastMessage = json.getString("msg")
                         currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
                         Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
                     }
-                    else if(json.getString("category") == "seen")
+                    else if(json.getString("messageStatus") == "3")
                     {
-                        updateMessageStatus("seen",json.getString("id").toString().toLong())
+                        updateMessageStatus(3,json.getString("id").toString().toLong())
                     }
                 }
             } catch (e: IOException) {

@@ -45,7 +45,7 @@ interface Dao {
     fun readNumberOfDeliveredMessagesForUser(senderId: String) : Int
 
     @Query("update message set messageStatus = :status where messageId = :id")
-    fun updateMessageStatus(status : String,id : Long)
+    fun updateMessageStatus(status : Int,id : Long)
 
     @Query("update user set unreadMessages = null where userId = :uid")
     fun updateUserCardData(uid : String)

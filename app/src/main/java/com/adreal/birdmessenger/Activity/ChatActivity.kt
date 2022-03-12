@@ -158,7 +158,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 jsonObject.put("receiverToken",receiverToken)
                 jsonObject.put("receiveTime",id)
                 jsonObject.put("msg",msg)
-                jsonObject.put("messageStatus","sending")
+                jsonObject.put("messageStatus",0)
                 jsonObject.put("category","chat")
 
                 dataJson.put("data",jsonObject)
@@ -228,7 +228,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
     private fun initToolbarImage()
     {
-        binding.toolbar.logo = BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage)))
+        //binding.toolbar.logo = BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage)))
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -372,8 +372,15 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 cursor?.close()
 
                 Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
+
+                createDocumentModel()
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    fun createDocumentModel()
+    {
+
     }
 }

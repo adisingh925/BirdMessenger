@@ -138,11 +138,11 @@ class FcmMessagingService : FirebaseMessagingService() {
             }
 
             "delivered" ->{
-                updateMessageStatus(remoteMessage.data["messageStatus"].toString(),remoteMessage.data["id"].toString().toLong())
+                updateMessageStatus(remoteMessage.data["messageStatus"].toString().toInt(),remoteMessage.data["id"].toString().toLong())
             }
 
             "seen" ->{
-                updateMessageStatus(remoteMessage.data["messageStatus"].toString(),remoteMessage.data["id"].toString().toLong())
+                updateMessageStatus(remoteMessage.data["messageStatus"].toString().toInt(),remoteMessage.data["id"].toString().toLong())
             }
 
             "img" ->{
@@ -165,7 +165,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
     }
 
-    private fun updateMessageStatus(status : String, id : Long) {
+    private fun updateMessageStatus(status : Int, id : Long) {
         Database.getDatabase(application).Dao().updateMessageStatus(status,id)
     }
 
@@ -302,6 +302,17 @@ class FcmMessagingService : FirebaseMessagingService() {
                     {
                         chatData.messageStatus = 3
                         addChatData(chatData)
+                        val currentUser = Database.getDatabase(applicationContext).Dao().readUserForUpdate(chatData.senderId.toString())
+                        if(chatData.msg == null)
+                        {
+                            currentUser.lastMessage = ""
+                        }
+                        else
+                        {
+                            currentUser.lastMessage = chatData.msg
+                        }
+                        currentUser.lastMessageTimeStamp = chatData.sendTime
+                        Database.getDatabase(applicationContext).Dao().updateUserData(currentUser)
                     }
                 }
                 else
