@@ -1,10 +1,12 @@
 package com.adreal.birdmessenger.Adapter
 
 import android.content.Context
+import android.media.Image
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Switch
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +33,10 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
 
     private val VIEW_TYPE_TWO = 2
 
+    private val VIEW_TYPE_THREE = 3
+
+    private val VIEW_TYPE_FOUR = 4
+
     private inner class ViewHolder1(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         var senderTextView: TextView = itemView.findViewById(R.id.senderMessage)
@@ -56,6 +62,30 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         }
     }
 
+    private inner class ViewHolder3(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        val receiverTextView: TextView = itemView.findViewById(R.id.receiverMessage)
+        val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
+
+        fun bind(position: Int) {
+            val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
+            receiverTextView.text = messageList[position].msg
+            receiverTime.text = time
+        }
+    }
+
+    private inner class ViewHolder4(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        val senderTime = itemView.findViewById<TextView>(R.id.senderDocumentTime)
+        val senderStatus = itemView.findViewById<ImageView>(R.id.senderStatus)
+        val progressBar = itemView.findViewById<ProgressBar>(R.id.progressBar)
+
+        fun bind(position: Int) {
+            val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
+            senderTime.text = time
+        }
+    }
+
     fun setdata(data : List<ChatModel>)
     {
         this.messageList = data
@@ -76,40 +106,64 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         {
             1 -> return ViewHolder1(LayoutInflater.from(context).inflate(R.layout.sender_layout, parent, false))
             2 -> return ViewHolder2(LayoutInflater.from(context).inflate(R.layout.receiver_layout,parent,false))
+            3 -> return ViewHolder3(LayoutInflater.from(context).inflate(R.layout.receiver_document_layout,parent,false))
+            4 -> return ViewHolder4(LayoutInflater.from(context).inflate(R.layout.sender_document_layout,parent,false))
         }
 
         return ViewHolder2(LayoutInflater.from(context).inflate(R.layout.receiver_layout,parent,false))
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when(messageList[position].senderId) {
-            auth.uid -> VIEW_TYPE_ONE
-            else -> VIEW_TYPE_TWO
+        if(messageList[position].senderId == auth.uid)
+        {
+            when(messageList[position].mediaType) {
+                0 -> return VIEW_TYPE_ONE
+                6 -> return VIEW_TYPE_FOUR
+                else -> VIEW_TYPE_TWO
+            }
         }
+        else
+        {
+            when(messageList[position].mediaType) {
+                0 -> return VIEW_TYPE_TWO
+                6 -> return VIEW_TYPE_THREE
+                else -> VIEW_TYPE_TWO
+            }
+        }
+        return VIEW_TYPE_ONE
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (messageList[position].senderId == auth.uid) {
-            (holder as ViewHolder1).bind(position)
-            when (messageList[position].messageStatus) {
-                3 -> {
-                    Glide.with(context).load(R.drawable.seen).circleCrop().into(holder.senderSeen)
-                }
+            when(messageList[position].mediaType) {
                 0 -> {
-                    Glide.with(context).load(R.drawable.sending).circleCrop().into(holder.senderSeen)
-                }
-                1 -> {
-                    Glide.with(context).load(R.drawable.sent).circleCrop().into(holder.senderSeen)
-                }
-                2 -> {
-                    Glide.with(context).load(R.drawable.delivered).circleCrop().into(holder.senderSeen)
+                    (holder as ViewHolder1).bind(position)
+                    when (messageList[position].messageStatus) {
+                        3 -> {
+                            Glide.with(context).load(R.drawable.seen).circleCrop().into(holder.senderSeen)
+                        }
+                        0 -> {
+                            Glide.with(context).load(R.drawable.sending).circleCrop().into(holder.senderSeen)
+                        }
+                        1 -> {
+                            Glide.with(context).load(R.drawable.sent).circleCrop().into(holder.senderSeen)
+                        }
+                        2 -> {
+                            Glide.with(context).load(R.drawable.delivered).circleCrop().into(holder.senderSeen)
+                        }
+                    }
                 }
             }
-        } else {
-            (holder as ViewHolder2).bind(position)
-            if(messageList[position].receiverId == auth.uid && messageList[position].messageStatus == 2)
-            {
-                onItemSeenListener.onItemSeen(messageList[position])
+        }
+        else if(messageList[position].receiverId == auth.uid) {
+            when(messageList[position].mediaType) {
+                0 -> {
+                    (holder as ViewHolder2).bind(position)
+                    if(messageList[position].receiverId == auth.uid && messageList[position].messageStatus == 2)
+                    {
+                        onItemSeenListener.onItemSeen(messageList[position])
+                    }
+                }
             }
         }
     }

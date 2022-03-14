@@ -52,4 +52,7 @@ interface Dao {
 
     @Query("select imageByteArray from user where userId = :uid")
     fun getImageData(uid : String) : String
+
+    @Query("delete from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId")
+    fun deleteAllChatsBetweenUsers(senderId : String, receiverId : String)
 }

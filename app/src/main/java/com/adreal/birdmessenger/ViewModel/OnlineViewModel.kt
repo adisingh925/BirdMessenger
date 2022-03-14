@@ -44,6 +44,8 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
 
     private val storage = Firebase.storage
 
+    var downloadUrl = MutableLiveData<String>()
+
     val liveData = MutableLiveData<String>()
 
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("myData", Context.MODE_PRIVATE)
@@ -149,7 +151,8 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d("File Uploading","failed")
             }?.addOnSuccessListener {
                 storage.reference.child("${auth.uid}/$name").downloadUrl.addOnSuccessListener{
-                    Log.d("Download Url","retrieved ${it.toString()}")
+                    Log.d("Download Url","retrieved $it")
+                    downloadUrl.postValue(it.toString())
                 }.addOnFailureListener{
                     Log.d("Download Url","retrieval failed")
                 }
@@ -180,7 +183,7 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d("FCM Response", response.toString())
                 if (response.isSuccessful) {
                     Log.d("Message Status", "successfully sent")
-                    if(json.getString("messageStatus") == "0")
+                    if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "0")
                     {
                         updateMessageStatus(1,json.getString("id").toString().toLong())
                         val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
@@ -188,7 +191,7 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                         currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
                         Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
                     }
-                    else if(json.getString("messageStatus") == "3")
+                    else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
                     {
                         updateMessageStatus(3,json.getString("id").toString().toLong())
                     }

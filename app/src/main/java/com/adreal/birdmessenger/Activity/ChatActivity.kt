@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.*
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -12,6 +13,7 @@ import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -20,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Connectivity.ConnectionLiveData
+import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.ViewModel.OfflineViewModel
@@ -27,6 +30,9 @@ import com.adreal.birdmessenger.ViewModel.OnlineViewModel
 import com.adreal.birdmessenger.databinding.ActivityChatBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
@@ -78,6 +84,8 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         connectionLiveData = ConnectionLiveData(this)
 
+        binding.toolbar.inflateMenu(R.menu.delete)
+
         initSharedPreferences()
 
         initRecycler()
@@ -107,6 +115,17 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 binding.attachment.isVisible = true
                 binding.fab.setImageResource(R.drawable.mic)
             }
+        }
+
+        binding.toolbar.setOnMenuItemClickListener()
+        {
+            when(it.itemId)
+            {
+                R.id.delete ->{
+                    showDeleteDialog()
+                }
+            }
+            true
         }
 
         binding.fab.setOnClickListener()
@@ -153,6 +172,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 jsonObject.put("receiveTime",id)
                 jsonObject.put("msg",msg)
                 jsonObject.put("messageStatus",0)
+                jsonObject.put("mediaType",0)
                 jsonObject.put("category","chat")
 
                 dataJson.put("data",jsonObject)
@@ -222,7 +242,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
     private fun initToolbarImage()
     {
-        //binding.toolbar.logo = BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage)))
+        binding.toolbar.logo = BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage)))
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -254,12 +274,28 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
+    private fun showDeleteDialog(){
+        val builder = AlertDialog.Builder(this)
+        builder.setPositiveButton("Yes"){_,_->
+            CoroutineScope(Dispatchers.IO).launch {
+                Database.getDatabase(applicationContext).Dao().deleteAllChatsBetweenUsers(auth.uid.toString(),receiverId)
+            }
+        }
+        builder.setNegativeButton("No"){_,_->
+
+        }
+        builder.setTitle("Delete Everything")
+        builder.setMessage("Are you sure you want to delete all messages for current user")
+        builder.create().show()
+    }
+
     override fun onItemSeen(data: ChatModel) {
         data.messageStatus = 3
         val jsonObject = JSONObject()
         val dataJson = JSONObject()
         jsonObject.put("id",data.messageId)
             .put("messageStatus",3)
+            .put("mediaType",0)
             .put("category","seen")
         dataJson.put("data",jsonObject)
             .put("to",data.senderToken)
@@ -369,14 +405,77 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
                 Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
 
+                createDocumentModel("", mimeType.toString(), nameOfFile.toString(), sizeOfFile)
+
                 onlineViewModel.uploadToFirebase(data.data)
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    fun createDocumentModel()
+    private fun createDocumentModel(url: String, mime: String, name: String, size: Long?)
     {
+        val jsonObject = JSONObject()
+        val dataJson = JSONObject()
+        val priority = JSONObject()
+        val message = JSONObject()
 
+        val id = System.currentTimeMillis()
+
+        val data = ChatModel(
+            id,
+            auth.uid,
+            senderToken,
+            id,
+            senderName,
+            receiverId,
+            receiverToken,
+            id,
+            null,
+            0,
+            6,
+            null,
+            url,
+            mime,
+            size,
+            name,
+            null,
+            null,
+            null
+        )
+
+        jsonObject.put("id",id)
+        jsonObject.put("senderId",auth.uid)
+        jsonObject.put("senderToken",senderToken)
+        jsonObject.put("sendTime",id)
+        jsonObject.put("senderName",senderName)
+        jsonObject.put("receiverId",receiverId)
+        jsonObject.put("receiverToken",receiverToken)
+        jsonObject.put("receiveTime",id)
+        jsonObject.put("messageStatus",0)
+        jsonObject.put("category","doc")
+        jsonObject.put("mediaType",6)
+        jsonObject.put("mediaUrl","doc")
+        jsonObject.put("mediaExtension",mime)
+        jsonObject.put("mediaSize",size)
+        jsonObject.put("mediaName",name)
+
+        dataJson.put("data",jsonObject)
+        dataJson.put("android",priority)
+        dataJson.put("to",receiverToken)
+
+        priority.put("priority","high")
+
+        message.put("message",dataJson)
+
+        offlineViewModel.addChatData(data)
+
+        onlineViewModel.downloadUrl.observe(this)
+        {
+            data.mediaUrl = it
+            jsonObject.put("mediaUrl",it)
+            offlineViewModel.updateChatData(data)
+            onlineViewModel.sendData(dataJson.toString(),jsonObject)
+        }
     }
 }
