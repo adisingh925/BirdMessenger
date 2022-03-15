@@ -6,11 +6,13 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Base64
+import android.util.JsonReader
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -30,6 +32,7 @@ import com.adreal.birdmessenger.ViewModel.OnlineViewModel
 import com.adreal.birdmessenger.databinding.ActivityChatBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,6 +61,8 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
     private lateinit var receiverToken : String
 
     private lateinit var receiverImage : String
+
+    private val storage = Firebase.storage
 
     lateinit var receiverId : String
 
@@ -384,43 +389,69 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        if(requestCode == 2)
+        if(requestCode == 2 && resultCode == RESULT_OK)
         {
             if(data!=null) {
+
+                Log.d("activity result","running")
 
                 val mimeType = data.data?.let { contentResolver.getType(it) }
 
                 val cursor = data.data?.let { contentResolver.query(it,null,null,null) }
 
                 val nameIndex = cursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+
                 val sizeIndex = cursor?.getColumnIndex(OpenableColumns.SIZE)
 
                 cursor?.moveToFirst()
 
-
                 val nameOfFile = nameIndex?.let { cursor.getString(it) }
+
                 val sizeOfFile = sizeIndex?.let { cursor.getLong(it) }
 
                 cursor?.close()
 
                 Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
 
-                createDocumentModel("", mimeType.toString(), nameOfFile.toString(), sizeOfFile)
+                val id = System.currentTimeMillis()
 
-                onlineViewModel.uploadToFirebase(data.data)
+                createDocumentModel("", mimeType.toString(), nameOfFile.toString(), sizeOfFile, id, data.data)
+
+                //onlineViewModel.uploadToFirebase(data.data, id)
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun createDocumentModel(url: String, mime: String, name: String, size: Long?)
+    private fun uploadToFirebase(uri: Uri?, id : Long, data : ChatModel, json : JSONObject, dataJson : JSONObject)
+    {
+        CoroutineScope(Dispatchers.IO).launch {
+            val uploadTask = uri?.let { storage.reference.child("${auth.uid}/$id").putFile(it) }
+
+            uploadTask?.addOnFailureListener {
+                Log.d("File Uploading","failed")
+            }?.addOnSuccessListener {
+                storage.reference.child("${auth.uid}/$id").downloadUrl.addOnSuccessListener{
+                    Log.d("Download Url","retrieved $it")
+                    data.mediaUrl = it.toString()
+                    json.put("mediaUrl",it)
+                    offlineViewModel.updateChatData(data)
+                    onlineViewModel.sendData(dataJson.toString(),json)
+
+                }.addOnFailureListener{
+                    Log.d("Download Url","retrieval failed")
+                }
+                Log.d("File Uploading","success")
+            }
+        }
+    }
+
+    private fun createDocumentModel(url: String, mime: String, name: String, size: Long?, id : Long, uri : Uri?)
     {
         val jsonObject = JSONObject()
         val dataJson = JSONObject()
         val priority = JSONObject()
         val message = JSONObject()
-
-        val id = System.currentTimeMillis()
 
         val data = ChatModel(
             id,
@@ -455,7 +486,6 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         jsonObject.put("messageStatus",0)
         jsonObject.put("category","doc")
         jsonObject.put("mediaType",6)
-        jsonObject.put("mediaUrl","doc")
         jsonObject.put("mediaExtension",mime)
         jsonObject.put("mediaSize",size)
         jsonObject.put("mediaName",name)
@@ -470,12 +500,16 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         offlineViewModel.addChatData(data)
 
-        onlineViewModel.downloadUrl.observe(this)
-        {
-            data.mediaUrl = it
-            jsonObject.put("mediaUrl",it)
-            //offlineViewModel.updateChatData(data)
-            onlineViewModel.sendData(dataJson.toString(),jsonObject)
-        }
+        uploadToFirebase(uri,id,data,jsonObject,dataJson)
+
+//        onlineViewModel.downloadUrl.observe(this)
+//        {
+//            Log.d("running","number of times")
+//
+//            data.mediaUrl = it
+//            jsonObject.put("mediaUrl",it)
+//            offlineViewModel.updateChatData(data)
+//            onlineViewModel.sendData(dataJson.toString(),jsonObject)
+//        }
     }
 }

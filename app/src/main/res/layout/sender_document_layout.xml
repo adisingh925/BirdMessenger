@@ -13,8 +13,6 @@
         android:layout_marginTop="4dp"
         android:elevation="4dp"
         android:background="@drawable/sender_background"
-        android:maxWidth="300dp"
-        android:minHeight="40dp"
         android:padding="4dp">
 
         <TextView
@@ -31,6 +29,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:id="@+id/filedetails"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="hello good friends"
@@ -50,17 +49,8 @@
             android:textColor="?attr/font_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guideline3"
-            app:layout_constraintTop_toBottomOf="@id/filename"
+            app:layout_constraintTop_toBottomOf="@id/filedetails"
             app:tint="@color/white" />
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:outlineSpotShadowColor="@color/white"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline3"
-            app:layout_constraintTop_toBottomOf="@id/filename" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline3"

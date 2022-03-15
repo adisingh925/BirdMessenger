@@ -99,13 +99,13 @@ class FcmMessagingService : FirebaseMessagingService() {
                     1,
                     0,
                     null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
                 )
 
                 val sharedPreferences = this.getSharedPreferences("isOpen",Context.MODE_PRIVATE)
@@ -118,6 +118,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                     jsonObject.put("id",id)
                         .put("messageStatus",3)
                         .put("category","seen")
+                        .put("mediaType",0)
                     dataJson.put("data",jsonObject)
                         .put("to",senderToken)
 
@@ -130,6 +131,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                     jsonObject.put("id",id)
                         .put("messageStatus",2)
                         .put("category","delivered")
+                        .put("mediaType",0)
                     dataJson.put("data",jsonObject)
                         .put("to",senderToken)
 
@@ -154,7 +156,71 @@ class FcmMessagingService : FirebaseMessagingService() {
             }
 
             "doc" ->{
+                val id = remoteMessage.data["id"].toString().toLong()
+                val senderId = remoteMessage.data["senderId"].toString()
+                val senderToken = remoteMessage.data["senderToken"].toString()
+                val sendTime = remoteMessage.data["sendTime"].toString().toLong()
+                val senderName = remoteMessage.data["senderName"].toString()
+                val receiverId = remoteMessage.data["receiverId"].toString()
+                val receiverToken = remoteMessage.data["receiverToken"].toString()
+                val mediaType = remoteMessage.data["mediaType"].toString().toInt()
+                val mediaExtension = remoteMessage.data["mediaExtension"].toString()
+                val mediaSize = remoteMessage.data["mediaSize"].toString().toLong()
+                val mediaName = remoteMessage.data["mediaName"].toString()
+                val mediaUrl = remoteMessage.data["mediaUrl"].toString()
 
+                val currentTime = System.currentTimeMillis()
+
+                chatData = ChatModel(id,
+                    senderId,
+                    senderToken,
+                    sendTime,
+                    senderName,
+                    receiverId,
+                    receiverToken,
+                    currentTime,
+                    null,
+                    1,
+                    mediaType,
+                    null,
+                    mediaUrl,
+                    mediaExtension,
+                    mediaSize,
+                    mediaName,
+                    null,
+                    null,
+                    null
+                )
+
+                val sharedPreferences = this.getSharedPreferences("isOpen",Context.MODE_PRIVATE)
+                val state = sharedPreferences.getString(senderId,"no")
+                Log.d("state","$state $senderId")
+                if(state == "yes")
+                {
+                    val jsonObject = JSONObject()
+                    val dataJson = JSONObject()
+                    jsonObject.put("id",id)
+                        .put("messageStatus",3)
+                        .put("category","seen")
+                        .put("mediaType",6)
+                    dataJson.put("data",jsonObject)
+                        .put("to",senderToken)
+
+                    sendData(dataJson.toString(),jsonObject)
+                }
+                else
+                {
+                    val jsonObject = JSONObject()
+                    val dataJson = JSONObject()
+                    jsonObject.put("id",id)
+                        .put("messageStatus",2)
+                        .put("category","delivered")
+                        .put("mediaType",6)
+                    dataJson.put("data",jsonObject)
+                        .put("to",senderToken)
+
+                    sendData(dataJson.toString(),jsonObject)
+                }
             }
 
             "location" ->{
@@ -279,7 +345,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                 val response = client.newCall(request).execute()
                 Log.d("FCM Response", response.toString())
                 if (response.isSuccessful) {
-                    if(json.get("category") == "delivered")
+                    if(json.get("category") == "delivered" && json.getString("mediaType") == "0")
                     {
                         chatData.messageStatus = 2
                         addChatData(chatData)
@@ -298,7 +364,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                         Database.getDatabase(applicationContext).Dao().updateUserData(currentUser)
                         prepareChatNotification(chatData.senderId.toString(),unreadMessages.toString())
                     }
-                    else if(json.get("category") == "seen")
+                    else if(json.get("category") == "seen" && json.getString("mediaType") == "0")
                     {
                         chatData.messageStatus = 3
                         addChatData(chatData)
@@ -314,14 +380,49 @@ class FcmMessagingService : FirebaseMessagingService() {
                         currentUser.lastMessageTimeStamp = chatData.sendTime
                         Database.getDatabase(applicationContext).Dao().updateUserData(currentUser)
                     }
+                    else if(json.get("category") == "seen" && json.getString("mediaType") == "6")
+                    {
+                        chatData.messageStatus = 3
+                        addChatData(chatData)
+                        val currentUser = Database.getDatabase(applicationContext).Dao().readUserForUpdate(chatData.senderId.toString())
+                        if(chatData.mediaName == null)
+                        {
+                            currentUser.lastMessage = ""
+                        }
+                        else
+                        {
+                            currentUser.lastMessage = chatData.mediaName
+                        }
+                        currentUser.lastMessageTimeStamp = chatData.sendTime
+                        Database.getDatabase(applicationContext).Dao().updateUserData(currentUser)
+                    }
+                    else if(json.get("category") == "delivered" && json.getString("mediaType") == "6")
+                    {
+                        chatData.messageStatus = 2
+                        addChatData(chatData)
+                        val currentUser = Database.getDatabase(applicationContext).Dao().readUserForUpdate(chatData.senderId.toString())
+                        if(chatData.mediaName == null)
+                        {
+                            currentUser.lastMessage = ""
+                        }
+                        else
+                        {
+                            currentUser.lastMessage = chatData.mediaName
+                        }
+                        currentUser.lastMessageTimeStamp = chatData.sendTime
+                        val unreadMessages = Database.getDatabase(applicationContext).Dao().readNumberOfDeliveredMessagesForUser(chatData.senderId.toString())
+                        currentUser.unreadMessages = unreadMessages
+                        Database.getDatabase(applicationContext).Dao().updateUserData(currentUser)
+                        prepareChatNotification(chatData.senderId.toString(),unreadMessages.toString())
+                    }
                 }
                 else
                 {
-                    if(json.get("category") == "delivered")
+                    if(json.get("category") == "delivered" && json.getString("mediaType") == "0")
                     {
                         addChatData(chatData)
                     }
-                    else if(json.get("category") == "seen")
+                    else if(json.get("category") == "seen" && json.getString("mediaType") == "0")
                     {
                         addChatData(chatData)
                     }

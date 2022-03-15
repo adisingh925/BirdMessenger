@@ -44,7 +44,7 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
 
     private val storage = Firebase.storage
 
-    var downloadUrl = MutableLiveData<String>()
+    var downloadUrl = MutableLiveData<String?>()
 
     val liveData = MutableLiveData<String>()
 
@@ -139,18 +139,16 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun uploadToFirebase(uri: Uri?)
+    fun uploadToFirebase(uri: Uri?, id : Long)
     {
         viewModelScope.launch(Dispatchers.IO) {
 
-            val name = System.currentTimeMillis()
-
-            val uploadTask = uri?.let { storage.reference.child("${auth.uid}/$name").putFile(it) }
+            val uploadTask = uri?.let { storage.reference.child("${auth.uid}/$id").putFile(it) }
 
             uploadTask?.addOnFailureListener {
                 Log.d("File Uploading","failed")
             }?.addOnSuccessListener {
-                storage.reference.child("${auth.uid}/$name").downloadUrl.addOnSuccessListener{
+                storage.reference.child("${auth.uid}/$id").downloadUrl.addOnSuccessListener{
                     Log.d("Download Url","retrieved $it")
                     downloadUrl.postValue(it.toString())
                 }.addOnFailureListener{
@@ -194,6 +192,14 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                     else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
                     {
                         updateMessageStatus(3,json.getString("id").toString().toLong())
+                    }
+                    else if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "6")
+                    {
+                        updateMessageStatus(1,json.getString("id").toString().toLong())
+                        val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
+                        currentUser.lastMessage = json.getString("mediaName")
+                        currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
+                        Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
                     }
                 }
             } catch (e: IOException) {
