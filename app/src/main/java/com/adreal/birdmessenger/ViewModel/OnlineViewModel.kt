@@ -181,25 +181,35 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d("FCM Response", response.toString())
                 if (response.isSuccessful) {
                     Log.d("Message Status", "successfully sent")
-                    if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "0")
+                    if(json.getString("category") == "chat")
                     {
-                        updateMessageStatus(1,json.getString("id").toString().toLong())
-                        val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
-                        currentUser.lastMessage = json.getString("msg")
-                        currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
-                        Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "0")
+                        {
+                            updateMessageStatus(1,json.getString("id").toString().toLong())
+                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
+                            currentUser.lastMessage = json.getString("msg")
+                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
+                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+                        }
+                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
+                        {
+                            updateMessageStatus(3,json.getString("id").toString().toLong())
+                        }
                     }
-                    else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
+                    else if(json.getString("category") == "doc")
                     {
-                        updateMessageStatus(3,json.getString("id").toString().toLong())
-                    }
-                    else if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "6")
-                    {
-                        updateMessageStatus(1,json.getString("id").toString().toLong())
-                        val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
-                        currentUser.lastMessage = json.getString("mediaName")
-                        currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
-                        Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "6")
+                        {
+                            updateMessageStatus(1,json.getString("id").toString().toLong())
+                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
+                            currentUser.lastMessage = json.getString("mediaName")
+                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
+                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+                        }
+                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "6")
+                        {
+                            updateMessageStatus(3,json.getString("id").toString().toLong())
+                        }
                     }
                 }
             } catch (e: IOException) {
