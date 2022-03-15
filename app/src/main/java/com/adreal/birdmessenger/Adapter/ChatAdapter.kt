@@ -219,7 +219,6 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
 
                     holder.itemView.setOnClickListener()
                     {
-                        Toast.makeText(context,"you clicked a document",Toast.LENGTH_SHORT).show()
                         openLink(messageList[position].mediaUrl.toString())
                     }
                 }
