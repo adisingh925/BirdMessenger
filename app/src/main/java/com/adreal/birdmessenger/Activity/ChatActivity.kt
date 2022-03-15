@@ -474,7 +474,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         {
             data.mediaUrl = it
             jsonObject.put("mediaUrl",it)
-            offlineViewModel.updateChatData(data)
+            //offlineViewModel.updateChatData(data)
             onlineViewModel.sendData(dataJson.toString(),jsonObject)
         }
     }

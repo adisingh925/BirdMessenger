@@ -77,12 +77,14 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
     private inner class ViewHolder4(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         val senderTime = itemView.findViewById<TextView>(R.id.senderDocumentTime)
+        val filename = itemView.findViewById<TextView>(R.id.filename)
         val senderStatus = itemView.findViewById<ImageView>(R.id.senderStatus)
         val progressBar = itemView.findViewById<ProgressBar>(R.id.progressBar)
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
             senderTime.text = time
+            filename.text = messageList[position].mediaName
         }
     }
 
@@ -152,6 +154,10 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
                             Glide.with(context).load(R.drawable.delivered).circleCrop().into(holder.senderSeen)
                         }
                     }
+                }
+
+                6 ->{
+                    (holder as ViewHolder4).bind(position)
                 }
             }
         }
