@@ -316,7 +316,14 @@ class FcmMessagingService : FirebaseMessagingService() {
 
         for(i in data)
         {
-            style.addMessage(i.msg.toString(),i.sendTime!!,person)
+            if(i.mediaType == 0)
+            {
+                style.addMessage(i.msg.toString(),i.sendTime!!,person)
+            }
+            else if(i.mediaType == 6)
+            {
+                style.addMessage(i.mediaName.toString(),i.sendTime!!,person)
+            }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
