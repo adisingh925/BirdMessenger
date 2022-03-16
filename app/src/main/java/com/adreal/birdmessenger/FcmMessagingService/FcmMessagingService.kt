@@ -550,7 +550,7 @@ class FcmMessagingService : FirebaseMessagingService() {
             val channel = NotificationChannel(
                 channelId,
                 channelName,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             )
             channel.description = channelDescription
             notificationManager.createNotificationChannel(channel)

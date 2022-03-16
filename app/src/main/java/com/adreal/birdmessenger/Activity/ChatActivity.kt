@@ -33,6 +33,7 @@ import com.adreal.birdmessenger.databinding.ActivityChatBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import com.vanniktech.emoji.EmojiPopup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -94,6 +95,21 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         initSharedPreferences()
 
         initRecycler()
+
+        val popup = EmojiPopup.Builder.fromRootView(binding.root).build(binding.edittext)
+
+        binding.emoji.setOnClickListener()
+        {
+            if(popup.isShowing)
+            {
+                binding.emoji.setImageResource(R.drawable.emoji_notfilled)
+            }
+            else
+            {
+                binding.emoji.setImageResource(R.drawable.keyboard)
+            }
+            popup.toggle()
+        }
 
         receiverName = intent.getStringExtra("receiverName").toString()
         receiverToken = intent.getStringExtra("receiverToken").toString()
