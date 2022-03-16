@@ -98,6 +98,9 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
                 messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
                     imageView.setImageResource(R.drawable.video)
                 }
+                else ->{
+                    imageView.setImageResource(R.drawable.file)
+                }
             }
         }
     }
@@ -132,6 +135,9 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
                 }
                 messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
                     imageView.setImageResource(R.drawable.video)
+                }
+                else ->{
+                    imageView.setImageResource(R.drawable.file)
                 }
             }
         }
