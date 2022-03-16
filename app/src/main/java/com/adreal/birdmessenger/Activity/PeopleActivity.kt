@@ -3,6 +3,7 @@ package com.adreal.birdmessenger.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -18,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Adapter.PeopleAdapter
@@ -30,9 +32,13 @@ import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.judemanutd.autostarter.AutoStartPermissionHelper
 import java.io.ByteArrayOutputStream
+import java.lang.Boolean
+import kotlin.Int
+import kotlin.String
+import kotlin.toString
 
 
 class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
@@ -50,6 +56,8 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
     lateinit var recyclerView: RecyclerView
 
     lateinit var imageString: String
+
+    lateinit var manufacturer : String
 
     private var auth = Firebase.auth
 
@@ -73,6 +81,8 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
         initRecycler()
 
         initImage()
+
+        optimizeFCMForChineseDevices()
 
         offlineViewModel.readAllUsers.observe(this)
         {
@@ -115,6 +125,59 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
         recyclerView = binding.recyclerView
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
+    private fun optimizeFCMForChineseDevices()
+    {
+//        val intent = Intent()
+
+        manufacturer = android.os.Build.MANUFACTURER
+
+        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(baseContext)
+        val previouslyStarted = prefs.getBoolean("previously_started", false)
+        if (!previouslyStarted) {
+            val edit = prefs.edit()
+            edit.putBoolean("previously_started", Boolean.TRUE)
+            edit.apply()
+
+            if(AutoStartPermissionHelper.getInstance().isAutoStartPermissionAvailable(this))
+            {
+                AutoStartPermissionHelper.getInstance().getAutoStartPermission(this)
+            }
+        }
+
+//        when(manufacturer)
+//        {
+//            "xiaomi" ->{
+//                intent.component = ComponentName(
+//                    "com.miui.securitycenter",
+//                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
+//                )
+//            }
+//
+//            "oppo" ->{
+//                intent.component = ComponentName(
+//                    "com.coloros.safecenter",
+//                    "com.coloros.safecenter.permission.startup.StartupAppListActivity"
+//                )
+//            }
+//
+//            "vivo" ->{
+//                intent.component = ComponentName(
+//                    "com.vivo.permissionmanager",
+//                    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
+//                )
+//            }
+//        }
+
+//        val arrayList = packageManager.queryIntentActivities(
+//            intent,
+//            PackageManager.MATCH_DEFAULT_ONLY
+//        )
+//
+//        if (arrayList.size > 0) {
+//            startActivity(intent);
+//        }
     }
 
     private fun initImage()

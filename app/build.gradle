@@ -94,4 +94,7 @@ dependencies {
 
     //firebase storage
     implementation 'com.google.firebase:firebase-storage-ktx'
+
+    //autostart
+    implementation 'com.github.judemanutd:autostarter:1.1.0'
 }
