@@ -73,6 +73,7 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         val receiverTextView: TextView = itemView.findViewById(R.id.receiverMessage)
         val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
         val filedetails = itemView.findViewById<TextView>(R.id.filedetails)
+        val imageView = itemView.findViewById<ImageView>(R.id.imageview)
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
@@ -83,6 +84,21 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
                     it
                 )
             }}".also { filedetails.text = it }
+
+            when {
+                messageList[position].mediaExtension?.contains(Regex("application/pdf")) == true -> {
+                    imageView.setImageResource(R.drawable.pdf)
+                }
+                messageList[position].mediaExtension?.contains(Regex("image")) == true -> {
+                    imageView.setImageResource(R.drawable.image)
+                }
+                messageList[position].mediaExtension?.contains(Regex("audio")) == true -> {
+                    imageView.setImageResource(R.drawable.audio)
+                }
+                messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
+                    imageView.setImageResource(R.drawable.video)
+                }
+            }
         }
     }
 
@@ -92,6 +108,7 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         val filename = itemView.findViewById<TextView>(R.id.filename)
         val senderStatus = itemView.findViewById<ImageView>(R.id.senderStatus)
         val filedetails = itemView.findViewById<TextView>(R.id.filedetails)
+        val imageView = itemView.findViewById<ImageView>(R.id.imageview)
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
@@ -102,6 +119,21 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
                     it
                 )
             }}".also { filedetails.text = it }
+
+            when {
+                messageList[position].mediaExtension?.contains(Regex("application/pdf")) == true -> {
+                    imageView.setImageResource(R.drawable.pdf)
+                }
+                messageList[position].mediaExtension?.contains(Regex("image")) == true -> {
+                    imageView.setImageResource(R.drawable.image)
+                }
+                messageList[position].mediaExtension?.contains(Regex("audio")) == true -> {
+                    imageView.setImageResource(R.drawable.audio)
+                }
+                messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
+                    imageView.setImageResource(R.drawable.video)
+                }
+            }
         }
     }
 

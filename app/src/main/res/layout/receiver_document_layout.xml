@@ -15,16 +15,30 @@
         android:elevation="4dp"
         android:padding="4dp">
 
+        <ImageView
+            android:id="@+id/imageview"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            app:tint = "@color/black"
+            app:layout_constraintRight_toLeftOf="@id/receiverMessage"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline3"
+            android:src="@drawable/pdf"/>
+
         <TextView
             android:id="@+id/receiverMessage"
-            android:layout_width="wrap_content"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
             android:autoLink="all"
+            android:layout_marginStart="4dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:gravity="start"
             android:textStyle="bold"
             android:text="Received Message"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/imageview"
+            app:layout_constraintRight_toLeftOf="@id/guideline4"
             android:textColor="@color/black"
-            app:layout_constraintStart_toStartOf="@+id/guideline3"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -33,7 +47,6 @@
             android:layout_height="wrap_content"
             android:text="hello good friends"
             android:textColor="@color/black"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/receiverMessage"
             app:layout_constraintStart_toStartOf="@+id/receiverMessage"/>
 
@@ -42,7 +55,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.02" />
+            app:layout_constraintGuide_percent="0.05" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="1" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
