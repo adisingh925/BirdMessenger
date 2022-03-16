@@ -43,10 +43,15 @@
 
         <TextView
             android:id="@+id/filedetails"
-            android:layout_width="wrap_content"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
             android:text="hello good friends"
+            android:maxLines="2"
+            android:textSize="15sp"
+            android:ellipsize="end"
+            android:gravity="start"
             android:textColor="@color/black"
+            app:layout_constraintRight_toLeftOf="@id/guideline4"
             app:layout_constraintTop_toBottomOf="@id/receiverMessage"
             app:layout_constraintStart_toStartOf="@+id/receiverMessage"/>
 
