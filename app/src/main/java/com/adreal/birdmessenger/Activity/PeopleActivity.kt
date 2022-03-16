@@ -115,6 +115,11 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
                     intent.type="text/*"
                     startActivity(Intent.createChooser(intent,"Share To:"))
                 }
+
+                R.id.info ->{
+                    val intent = Intent(this,Info::class.java)
+                    startActivity(intent)
+                }
             }
             true
         }

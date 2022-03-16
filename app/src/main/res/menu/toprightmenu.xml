@@ -7,4 +7,8 @@
     <item android:id="@+id/key"
         android:title="Share Your Key"/>
 
+    <item
+        android:id="@+id/info"
+        android:title="App Info"/>
+
 </menu>
