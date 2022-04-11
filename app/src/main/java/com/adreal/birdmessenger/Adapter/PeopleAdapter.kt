@@ -77,7 +77,6 @@ class PeopleAdapter(private val context: Context, private val onItemClickListene
             intent.putExtra("receiverName",peopleList[position].userName)
             intent.putExtra("receiverId",peopleList[position].userId)
             intent.putExtra("receiverToken",peopleList[position].userToken)
-            //intent.putExtra("receiverImage",peopleList[position].imageByteArray)
 
             context.startActivity(intent)
 

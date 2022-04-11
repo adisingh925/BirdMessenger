@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-val TAG = "C-Manager"
+const val TAG = "C-Manager"
 
 class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
 

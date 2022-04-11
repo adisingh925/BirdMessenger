@@ -150,39 +150,6 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
                 AutoStartPermissionHelper.getInstance().getAutoStartPermission(this)
             }
         }
-
-//        when(manufacturer)
-//        {
-//            "xiaomi" ->{
-//                intent.component = ComponentName(
-//                    "com.miui.securitycenter",
-//                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
-//                )
-//            }
-//
-//            "oppo" ->{
-//                intent.component = ComponentName(
-//                    "com.coloros.safecenter",
-//                    "com.coloros.safecenter.permission.startup.StartupAppListActivity"
-//                )
-//            }
-//
-//            "vivo" ->{
-//                intent.component = ComponentName(
-//                    "com.vivo.permissionmanager",
-//                    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
-//                )
-//            }
-//        }
-
-//        val arrayList = packageManager.queryIntentActivities(
-//            intent,
-//            PackageManager.MATCH_DEFAULT_ONLY
-//        )
-//
-//        if (arrayList.size > 0) {
-//            startActivity(intent);
-//        }
     }
 
     private fun initImage()
