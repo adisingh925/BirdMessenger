@@ -10,23 +10,33 @@
     <Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        app:contentInsetLeft="0dp"
-        app:contentInsetStart="0dp"
-        app:contentInsetStartWithNavigation="0dp"
         android:background="#303030"
-        android:navigationIcon="@drawable/back"
         app:tint = "@color/white"
         android:layout_height="?actionBarSize"
-        android:title="aditya"
-        android:logo="@drawable/emoji"
         android:titleMarginStart="30dp"
         android:titleTextColor="?attr/font_color"
-        android:subtitle="offline"
         android:subtitleTextColor="@color/green"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toTopOf="@id/recyclerView"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        app:layout_constraintLeft_toLeftOf="parent">
+
+        <ImageView
+            android:id="@+id/toolbarImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:src="@drawable/emoji"/>
+
+        <TextView
+            android:id="@+id/toolbarName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="aditya"
+            android:layout_marginStart="50dp"
+            android:textColor="@color/white"
+            android:textSize="20sp"/>
+    </Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

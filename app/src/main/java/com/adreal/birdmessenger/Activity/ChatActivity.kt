@@ -121,7 +121,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         offlineViewModel.updateUserCardData(receiverId)
 
-        binding.toolbar.title = receiverName
+        binding.toolbarName.text = receiverName
 
         binding.edittext.addTextChangedListener {
             if(binding.edittext.text.toString() != "")
@@ -263,7 +263,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
     private fun initToolbarImage()
     {
-        binding.toolbar.logo = BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage)))
+        binding.toolbarImage.setImageDrawable(BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage))))
     }
 
     override fun onNewIntent(intent: Intent?) {
