@@ -58,7 +58,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
 
     //FCM
-    implementation 'com.google.firebase:firebase-messaging:23.0.2'
+    implementation 'com.google.firebase:firebase-messaging:23.0.3'
 
     //room libraries
     def roomVersion = "2.4.2"
@@ -84,7 +84,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.7.1")
 
     //FCM directBootMode
-    implementation 'com.google.firebase:firebase-messaging-directboot:23.0.2'
+    implementation 'com.google.firebase:firebase-messaging-directboot:23.0.3'
 
     //inApp messaging
     implementation 'com.google.firebase:firebase-inappmessaging-display-ktx'
