@@ -40,7 +40,6 @@ import kotlin.Int
 import kotlin.String
 import kotlin.toString
 
-
 class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
 
     private lateinit var binding: ActivityMainBinding
