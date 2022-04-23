@@ -13,7 +13,6 @@
         android:background="#303030"
         app:tint = "@color/white"
         android:layout_height="?actionBarSize"
-        android:titleMarginStart="30dp"
         android:titleTextColor="?attr/font_color"
         android:subtitleTextColor="@color/green"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,7 +24,7 @@
             android:id="@+id/toolbarImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="left"
+            android:layout_gravity="start"
             android:src="@drawable/emoji"/>
 
         <TextView
