@@ -37,15 +37,10 @@ import java.io.IOException
 class OnlineViewModel(application: Application) : AndroidViewModel(application) {
 
     private val auth = Firebase.auth
-
     private val firestore = Firebase.firestore
-
     private val realtimeDatabase = Firebase.database
-
     private val storage = Firebase.storage
-
     var downloadUrl = MutableLiveData<String?>()
-
     val liveData = MutableLiveData<String>()
 
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("myData", Context.MODE_PRIVATE)
