@@ -20,21 +20,6 @@
         app:layout_constraintBottom_toTopOf="@id/recyclerView"
         app:layout_constraintLeft_toLeftOf="parent">
 
-        <ImageView
-            android:id="@+id/toolbarImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:src="@drawable/emoji"/>
-
-        <TextView
-            android:id="@+id/toolbarName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="aditya"
-            android:layout_marginStart="50dp"
-            android:textColor="@color/white"
-            android:textSize="20sp"/>
     </Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView

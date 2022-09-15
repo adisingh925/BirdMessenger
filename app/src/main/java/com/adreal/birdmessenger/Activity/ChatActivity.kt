@@ -42,39 +42,22 @@ import org.json.JSONObject
 class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
     private lateinit var binding: ActivityChatBinding
-
     private lateinit var adapter: ChatAdapter
-
     private lateinit var recyclerView: RecyclerView
-
     private lateinit var onlineViewModel: OnlineViewModel
-
     private lateinit var offlineViewModel: OfflineViewModel
-
     private lateinit var connectionLiveData: ConnectionLiveData
-
     private lateinit var senderToken : String
-
     private lateinit var senderName : String
-
     private lateinit var receiverName : String
-
     private lateinit var receiverToken : String
-
     private lateinit var receiverImage : String
-
     private val storage = Firebase.storage
-
     lateinit var receiverId : String
-
     lateinit var sharedPreferencesForOpen: SharedPreferences
-
     lateinit var edit : SharedPreferences.Editor
-
     private var fromNotification = false
-
     var listSizeCount = 0
-
     private val auth = Firebase.auth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,11 +67,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        onlineViewModel = ViewModelProvider(this).get(OnlineViewModel::class.java)
-
-        offlineViewModel = ViewModelProvider(this).get(OfflineViewModel::class.java)
-
-        connectionLiveData = ConnectionLiveData(this)
+        initViewModel()
 
         binding.toolbar.inflateMenu(R.menu.delete)
 
@@ -121,7 +100,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         offlineViewModel.updateUserCardData(receiverId)
 
-        binding.toolbarName.text = receiverName
+        binding.toolbar.title = receiverName
 
         binding.edittext.addTextChangedListener {
             if(binding.edittext.text.toString() != "")
@@ -241,7 +220,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         offlineViewModel.imageLiveData.observe(this)
         {
             receiverImage = it
-            initToolbarImage()
+            //initToolbarImage()
         }
 
         recyclerView.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
@@ -261,10 +240,16 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         }
     }
 
-    private fun initToolbarImage()
-    {
-        binding.toolbarImage.setImageDrawable(BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage))))
+    private fun initViewModel(){
+        onlineViewModel = ViewModelProvider(this).get(OnlineViewModel::class.java)
+        offlineViewModel = ViewModelProvider(this).get(OfflineViewModel::class.java)
+        connectionLiveData = ConnectionLiveData(this)
     }
+
+//    private fun initToolbarImage()
+//    {
+//        binding.toolbar.setImageDrawable(BitmapDrawable(getCircleBitmap(base64ToBitmap(receiverImage))))
+//    }
 
     override fun onNewIntent(intent: Intent?) {
         Log.d("new intent is passed","")
