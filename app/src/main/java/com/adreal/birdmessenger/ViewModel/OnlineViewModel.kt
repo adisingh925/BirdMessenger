@@ -9,30 +9,28 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.adreal.birdmessenger.Constants.Constants.FCM_API_KEY
-import com.adreal.birdmessenger.Constants.Constants.FCM_URL
 import com.adreal.birdmessenger.Constants.Constants.Users
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
+import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
+import com.adreal.birdmessenger.Retrofit.SendChatObject
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import com.squareup.okhttp.MediaType
-import com.squareup.okhttp.OkHttpClient
-import com.squareup.okhttp.Request
-import com.squareup.okhttp.RequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class OnlineViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -42,6 +40,7 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
     private val storage = Firebase.storage
     var downloadUrl = MutableLiveData<String?>()
     val liveData = MutableLiveData<String>()
+    val isMsgSent = MutableLiveData<ChatResponse>()
 
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("myData", Context.MODE_PRIVATE)
 
@@ -158,58 +157,76 @@ class OnlineViewModel(application: Application) : AndroidViewModel(application) 
         data : String,
         json : JSONObject
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val client = OkHttpClient()
-            val JSON = MediaType.parse("application/json; charset=utf-8")
-            val body = RequestBody.create(JSON,data)
-            val request = Request.Builder()
-                .url(FCM_URL)
-                .post(body)
-                .addHeader("Content-Type", "application/json")
-                .addHeader(
-                    "Authorization",
-                    "key=$FCM_API_KEY"
-                )
-                .build()
-            try {
-                val response = client.newCall(request).execute()
-                Log.d("FCM Response", response.toString())
-                if (response.isSuccessful) {
-                    Log.d("Message Status", "successfully sent")
-                    if(json.getString("category") == "chat")
-                    {
-                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "0")
-                        {
-                            updateMessageStatus(1,json.getString("id").toString().toLong())
-                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
-                            currentUser.lastMessage = json.getString("msg")
-                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
-                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
-                        }
-                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
-                        {
-                            updateMessageStatus(3,json.getString("id").toString().toLong())
-                        }
-                    }
-                    else if(json.getString("category") == "doc")
-                    {
-                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "6")
-                        {
-                            updateMessageStatus(1,json.getString("id").toString().toLong())
-                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
-                            currentUser.lastMessage = json.getString("mediaName")
-                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
-                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
-                        }
-                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "6")
-                        {
-                            updateMessageStatus(3,json.getString("id").toString().toLong())
-                        }
-                    }
+//        viewModelScope.launch(Dispatchers.IO) {
+//            val client = OkHttpClient()
+//            val JSON = MediaType.parse("application/json; charset=utf-8")
+//            val body = RequestBody.create(JSON,data)
+//            val request = Request.Builder()
+//                .url(FCM_URL)
+//                .post(body)
+//                .addHeader("Content-Type", "application/json")
+//                .addHeader(
+//                    "Authorization",
+//                    "key=$FCM_API_KEY"
+//                )
+//                .build()
+//            try {
+//                val response = client.newCall(request).execute()
+//                Log.d("FCM Response", response.toString())
+//                if (response.isSuccessful) {
+//                    Log.d("Message Status", "successfully sent")
+//                    if(json.getString("category") == "chat")
+//                    {
+//                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "0")
+//                        {
+//                            updateMessageStatus(1,json.getString("id").toString().toLong())
+//                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
+//                            currentUser.lastMessage = json.getString("msg")
+//                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
+//                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+//                        }
+//                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "0")
+//                        {
+//                            updateMessageStatus(3,json.getString("id").toString().toLong())
+//                        }
+//                    }
+//                    else if(json.getString("category") == "doc")
+//                    {
+//                        if(json.getString("messageStatus") == "0" && json.getString("mediaType") == "6")
+//                        {
+//                            updateMessageStatus(1,json.getString("id").toString().toLong())
+//                            val currentUser = Database.getDatabase(getApplication()).Dao().readUserForUpdate(json.getString("receiverId"))
+//                            currentUser.lastMessage = json.getString("mediaName")
+//                            currentUser.lastMessageTimeStamp = json.getString("sendTime").toString().toLong()
+//                            Database.getDatabase(getApplication()).Dao().updateUserData(currentUser)
+//                        }
+//                        else if(json.getString("messageStatus") == "3" && json.getString("mediaType") == "6")
+//                        {
+//                            updateMessageStatus(3,json.getString("id").toString().toLong())
+//                        }
+//                    }
+//                }
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+        val json = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val body = data.toRequestBody(json)
+        val chat = SendChatObject.sendChatInstance.sendChat("key=$FCM_API_KEY",body)
+
+        chat.enqueue(object : Callback<ChatResponse>{
+            override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
+                Log.d("response",response.toString())
+                val details = response.body()
+                if(details != null){
+                    Log.d("details",details.toString())
+                    isMsgSent.postValue(details)
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
             }
-        }
+
+            override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
+
+            }
+        })
     }
 }
