@@ -153,7 +153,7 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
 
     private fun initImage()
     {
-        val bitmap = cropToSquare(BitmapFactory.decodeResource(this.resources, R.drawable.ic_stat_person))
+        val bitmap = cropToSquare(BitmapFactory.decodeResource(this.resources, R.drawable.programmer))
         val image = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, image)
         val imageByteArray = image.toByteArray()
@@ -198,7 +198,7 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
         if(button.text.equals("Set"))
         {
             image.isVisible = true
-            Glide.with(this).load(R.drawable.ic_stat_person).into(dialog.findViewById(R.id.imageView))
+            Glide.with(this).load(R.drawable.programmer).into(dialog.findViewById(R.id.imageView))
             edit.isVisible = true
             textview.isVisible = false
             dialog.setCancelable(false)
@@ -302,9 +302,9 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
-    override fun onItemClick(data: UserModel) {
-        showImageDialog(data.imageByteArray.toString())
-    }
+//    override fun onItemClick(data: UserModel) {
+//        showImageDialog(data.imageByteArray.toString())
+//    }
 
     override fun onStart() {
         //onlineViewModel.setStatus("online")
@@ -328,5 +328,9 @@ class PeopleActivity : AppCompatActivity(), PeopleAdapter.OnItemClickListener {
 
     override fun onStop() {
         super.onStop()
+    }
+
+    override fun onItemClick(data: UserModel, type: Int) {
+        TODO("Not yet implemented")
     }
 }

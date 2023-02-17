@@ -7,11 +7,18 @@ import androidx.work.WorkerParameters
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
+import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
+import com.adreal.birdmessenger.Retrofit.SendChatObject
 import com.squareup.okhttp.MediaType
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import com.squareup.okhttp.RequestBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.IOException
 
 class UploadWorker(appContext: Context, workerParameters: WorkerParameters) : Worker(appContext,workerParameters) {
@@ -22,8 +29,7 @@ class UploadWorker(appContext: Context, workerParameters: WorkerParameters) : Wo
 
         for(it in allMessages)
         {
-            if(it.messageStatus == 0 && it.mediaType == 0
-            )
+            if(it.messageStatus == 0 && it.mediaType == 0)
             {
                 val jsonObject = JSONObject()
                 val dataJson = JSONObject()
@@ -32,81 +38,50 @@ class UploadWorker(appContext: Context, workerParameters: WorkerParameters) : Wo
 
                 jsonObject.put("id",it.messageId)
                 jsonObject.put("senderId",it.senderId)
-                jsonObject.put("senderToken",it.senderToken)
                 jsonObject.put("sendTime",it.sendTime)
-                jsonObject.put("senderName",it.senderName)
                 jsonObject.put("receiverId",it.receiverId)
-                jsonObject.put("receiverToken",it.receiverToken)
-                jsonObject.put("receiveTime",it.receiveTime)
                 jsonObject.put("msg",it.msg)
                 jsonObject.put("messageStatus",it.messageStatus)
                 jsonObject.put("category","chat")
 
                 dataJson.put("data",jsonObject)
                 dataJson.put("android",priority)
-                dataJson.put("to",it.receiverToken)
+                dataJson.put("to",Database.getDatabase(applicationContext).Dao().getToken(it.receiverId.toString()))
 
                 priority.put("priority","high")
 
-                message.put("message",dataJson)
-
-                sendData(dataJson.toString(),jsonObject)
+                send(dataJson.toString(),it)
             }
         }
 
         return Result.success()
     }
 
-    private fun sendData(
-        data : String,
-        json : JSONObject)
-    {
-        val client = OkHttpClient()
-        val JSON = MediaType.parse("application/json; charset=utf-8")
-        val body = RequestBody.create(JSON,data)
-        val request = Request.Builder()
-            .url(Constants.FCM_URL)
-            .post(body)
-            .addHeader("Content-Type", "application/json")
-            .addHeader(
-                "Authorization",
-                "key=${Constants.FCM_API_KEY}"
-            )
-            .build()
-        try {
-            val response = client.newCall(request).execute()
-            Log.d("FCM Response", response.toString())
-            if (response.isSuccessful) {
-                if(json.getString("category").toString() == "sending")
-                {
-                    val data = ChatModel(
-                        json.getString("id").toString().toLong(),
-                        json.getString("senderId"),
-                        json.getString("senderToken"),
-                        json.getString("sendTime").toString().toLong(),
-                        json.getString("senderName"),
-                        json.getString("receiverId"),
-                        json.getString("receiverToken"),
-                        json.getString("receiverTime").toString().toLong(),
-                        json.getString("msg"),
-                        1,
-                        0,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null
-                    )
+    fun send(dataJson: String, data: ChatModel) {
+        val json = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val body = dataJson.toRequestBody(json)
+        val chat = SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}",body)
 
-                    updateChatData(data)
+        chat.enqueue(object : Callback<ChatResponse> {
+            override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
+                Log.d("response",response.toString())
+                val details = response.body()
+                if(details != null){
+                    Log.d("details",details.toString())
+                    if(data.messageStatus == 0){
+                        data.messageStatus = 1
+                        updateChatData(data)
+                    }else{
+                        data.messageStatus = 3
+                        updateChatData(data)
+                    }
                 }
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
+
+            override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
+                Log.d("msg sending failed",t.message.toString())
+            }
+        })
     }
 
     private fun updateChatData(data : ChatModel) {

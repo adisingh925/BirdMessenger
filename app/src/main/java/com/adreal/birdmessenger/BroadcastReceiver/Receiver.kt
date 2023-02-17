@@ -10,16 +10,16 @@ class Receiver : BroadcastReceiver() {
 
         val manager = context!!.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val notificationId = intent?.getIntExtra("notificationId",0)
-
+        val notificationId = intent?.getIntExtra("notificationId", -1)
         val delete = intent?.getStringExtra("delete")
 
-        if (notificationId != null) {
-            manager.cancel(notificationId)
+        if (notificationId != -1) {
+            if (notificationId != null) {
+                manager.cancel(notificationId)
+            }
         }
 
-        if(delete == "yes")
-        {
+        if (delete == "y") {
             manager.cancelAll()
         }
     }

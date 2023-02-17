@@ -140,27 +140,19 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 val id = System.currentTimeMillis()
                 val msg = binding.edittext.text.toString()
                 binding.edittext.setText("")
-                val data = ChatModel(
-                    id,
-                    auth.uid,
-                    senderToken,
-                    id,
-                    senderName,
-                    receiverId,
-                    receiverToken,
-                    id,
-                    msg,
-                    0,
-                    0,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                )
+//                val data = ChatModel(
+//                    id,
+//                    auth.uid,
+//                    senderToken,
+//                    id,
+//                    senderName,
+//                    receiverId,
+//                    receiverToken,
+//                    id,
+//                    msg,
+//                    0,
+//                    0
+//                )
 
                 jsonObject.put("id",id)
                 jsonObject.put("senderId",auth.uid)
@@ -184,7 +176,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
                 message.put("message",dataJson)
 
                 onlineViewModel.sendData(dataJson.toString(),jsonObject)
-                offlineViewModel.addChatData(data)
+//                offlineViewModel.addChatData(data)
             }
         }
 
@@ -199,12 +191,12 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
             if(it.size>listSizeCount)
             {
                 listSizeCount = it.size
-                adapter.setdata(it)
+                adapter.setdata(it,senderName)
                 recyclerView.scrollToPosition(it.size - 1)
             }
             else
             {
-                adapter.setdata(it)
+                adapter.setdata(it,senderName)
             }
         }
 
@@ -223,13 +215,13 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
             //initToolbarImage()
         }
 
-        recyclerView.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            if(bottom<oldBottom)
-            {
-                if(listSizeCount >= 1)
-                recyclerView.smoothScrollToPosition(listSizeCount-1)
-            }
-        }
+//        recyclerView.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+//            if(bottom<oldBottom)
+//            {
+//                if(listSizeCount >= 1)
+//                recyclerView.smoothScrollToPosition(listSizeCount-1)
+//            }
+//        }
 
         connectionLiveData.observe(this)
         { isNetworkAvailable ->
@@ -304,7 +296,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
             .put("mediaType",0)
             .put("category","seen")
         dataJson.put("data",jsonObject)
-            .put("to",data.senderToken)
+//            .put("to",data.senderToken)
         onlineViewModel.sendData(dataJson.toString(),jsonObject)
     }
 
@@ -434,7 +426,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
             }?.addOnSuccessListener {
                 storage.reference.child("${auth.uid}/$id").downloadUrl.addOnSuccessListener{
                     Log.d("Download Url","retrieved $it")
-                    data.mediaUrl = it.toString()
+//                    data.mediaUrl = it.toString()
                     json.put("mediaUrl",it)
                     offlineViewModel.updateChatData(data)
                     onlineViewModel.sendData(dataJson.toString(),json)
@@ -454,27 +446,19 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         val priority = JSONObject()
         val message = JSONObject()
 
-        val data = ChatModel(
-            id,
-            auth.uid,
-            senderToken,
-            id,
-            senderName,
-            receiverId,
-            receiverToken,
-            id,
-            null,
-            0,
-            6,
-            null,
-            url,
-            mime,
-            size,
-            name,
-            null,
-            null,
-            null
-        )
+//        val data = ChatModel(
+//            id,
+//            auth.uid,
+//            senderToken,
+//            id,
+//            senderName,
+//            receiverId,
+//            receiverToken,
+//            id,
+//            null,
+//            0,
+//            6
+//        )
 
         jsonObject.put("id",id)
         jsonObject.put("senderId",auth.uid)
@@ -499,9 +483,9 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         message.put("message",dataJson)
 
-        offlineViewModel.addChatData(data)
+//        offlineViewModel.addChatData(data)
 
-        uploadToFirebase(uri,id,data,jsonObject,dataJson)
+//        uploadToFirebase(uri,id,data,jsonObject,dataJson)
 
 //        onlineViewModel.downloadUrl.observe(this)
 //        {

@@ -2,93 +2,125 @@ package com.adreal.birdmessenger.Adapter
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Activity.ChatActivity
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.UserModel
+import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.databinding.PeopleLayoutBinding
 import com.bumptech.glide.Glide
+import io.noties.markwon.Markwon
+import io.noties.markwon.movement.MovementMethodPlugin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
-class PeopleAdapter(private val context: Context, private val onItemClickListener : OnItemClickListener) :
+class PeopleAdapter(
+    private val context: Context,
+    private val onItemClickListener: OnItemClickListener
+) :
     RecyclerView.Adapter<PeopleAdapter.myViewHolder>() {
 
     private lateinit var binding: PeopleLayoutBinding
 
-    private  var peopleList = emptyList<UserModel>()
+    private var peopleList : MutableList<UserModel> = ArrayList()
 
-    interface OnItemClickListener
-    {
-        fun onItemClick(data : UserModel)
+    private val markWon by lazy {
+        context.let { Markwon.builder(context).usePlugin(MovementMethodPlugin.none()).build() }
     }
 
-    class myViewHolder(binding : PeopleLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
+    interface OnItemClickListener {
+        fun onItemClick(data: UserModel, type: Int)
+    }
+
+    class myViewHolder(binding: PeopleLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         val image = binding.imageView
         val text = binding.textView
         val lastMessage = binding.lastMessage
         val unseenMessages = binding.unseenMessages
         val timeStamp = binding.timeStamp
+        val parent = binding.peopleLayoutParent
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): myViewHolder {
-        binding = PeopleLayoutBinding.inflate(LayoutInflater.from(parent.context),parent,false)
+        binding = PeopleLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return myViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: myViewHolder, position: Int) {
-        Glide.with(context).load(peopleList[position].imageByteArray?.let { base64ToBitmap(it) }).circleCrop().into(holder.image)
+        Log.d("working","working")
+        if (peopleList[position].imageByteArray.toString() == "null") {
+            Glide.with(context)
+                .load(
+                    base64ToBitmap(
+                        com.adreal.birdmessenger.SharedPreferences.SharedPreferences.read(
+                            "image",
+                            ""
+                        )
+                    )
+                )
+                .circleCrop().into(holder.image)
+        } else {
+            Glide.with(context)
+                .load(base64ToBitmap(peopleList[position].imageByteArray))
+                .circleCrop().into(holder.image)
+        }
+
         holder.text.text = peopleList[position].userName
-        holder.lastMessage.text = peopleList[position].lastMessage
+
+        markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
+
         holder.unseenMessages.text = peopleList[position].unreadMessages.toString()
-        if(peopleList[position].lastMessageTimeStamp.toString() == "null")
-        {
+
+        if (peopleList[position].lastMessageTimeStamp == null) {
             holder.timeStamp.text = ""
+        } else {
+            holder.timeStamp.text =
+                getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
         }
-        else
-        {
-            holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
-        }
-        if(peopleList[position].unreadMessages.toString() == "null")
-        {
+
+        if (peopleList[position].unreadMessages == 0) {
             holder.unseenMessages.text = ""
-        }
-        else
-        {
+        } else {
             holder.unseenMessages.text = peopleList[position].unreadMessages.toString()
         }
 
         holder.image.setOnClickListener()
         {
-            onItemClickListener.onItemClick(peopleList[position])
+            onItemClickListener.onItemClick(peopleList[position], 0)
         }
 
         holder.itemView.setOnClickListener()
         {
-            val intent = Intent(context, ChatActivity::class.java)
-            intent.putExtra("receiverName",peopleList[position].userName)
-            intent.putExtra("receiverId",peopleList[position].userId)
-            intent.putExtra("receiverToken",peopleList[position].userToken)
-
-            context.startActivity(intent)
-
-            updateUserData(peopleList[position])
+            onItemClickListener.onItemClick(peopleList[position], 1)
         }
     }
 
-    private fun updateUserData(data : UserModel)
-    {
-        CoroutineScope(Dispatchers.IO).launch {
-            data.unreadMessages = null
-            Database.getDatabase(context).Dao().updateUserData(data)
+    override fun onBindViewHolder(holder: myViewHolder, position: Int, payloads: MutableList<Any>) {
+        if(payloads.isEmpty()){
+            super.onBindViewHolder(holder, position, payloads)
+        }else{
+            Log.d("payload", payloads.toString())
+            holder.lastMessage.text = peopleList[position].lastMessage
+
+            holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+
+            if (peopleList[position].unreadMessages == 0) {
+                holder.unseenMessages.text = ""
+            } else {
+                holder.unseenMessages.text = peopleList[position].unreadMessages.toString()
+            }
         }
     }
 
@@ -96,13 +128,36 @@ class PeopleAdapter(private val context: Context, private val onItemClickListene
         return peopleList.size
     }
 
-    fun setData(data : List<UserModel>)
-    {
-        this.peopleList = data
-        notifyDataSetChanged()
+    fun setData(data: List<UserModel>) {
+        if(peopleList.isEmpty()){
+            Log.d("list", "initialized")
+            peopleList = data as MutableList<UserModel>
+            notifyItemRangeChanged(0,data.size)
+        }else{
+            Log.d("changed data",data[0].Id + "  " + peopleList[0].Id)
+            if(data.size == peopleList.size){
+                if(data[0].Id != peopleList[0].Id){
+                    for(i in peopleList){
+                        if(i.Id == data[0].Id){
+                            val index = peopleList.indexOf(i)
+                            peopleList.removeAt(index)
+                            peopleList.add(0,data[0])
+
+                            notifyItemMoved(index,0)
+
+                            peopleList[0] = data[0]
+                            notifyItemChanged(0)
+                        }
+                    }
+                }else{
+                    peopleList[0] = data[0]
+                    notifyItemChanged(0, "hello")
+                }
+            }
+        }
     }
 
-    private fun base64ToBitmap(data: String): Bitmap {
+    private fun base64ToBitmap(data: String?): Bitmap {
         val imageBytes = Base64.decode(data, 0)
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }

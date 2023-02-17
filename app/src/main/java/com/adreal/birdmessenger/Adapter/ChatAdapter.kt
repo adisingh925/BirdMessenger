@@ -24,24 +24,21 @@ import java.text.StringCharacterIterator
 import java.util.*
 
 
-class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemSeenListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ChatAdapter(
+    private val context: Context,
+    private val onItemSeenListener: OnItemSeenListener
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var messageList = emptyList<ChatModel>()
+    lateinit var installationId: String
 
-    private val auth = Firebase.auth
-
-    interface OnItemSeenListener
-    {
-        fun onItemSeen(data : ChatModel)
+    interface OnItemSeenListener {
+        fun onItemSeen(data: ChatModel)
     }
 
     private val VIEW_TYPE_ONE = 1
 
     private val VIEW_TYPE_TWO = 2
-
-    private val VIEW_TYPE_THREE = 3
-
-    private val VIEW_TYPE_FOUR = 4
 
     private inner class ViewHolder1(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -68,85 +65,13 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         }
     }
 
-    private inner class ViewHolder3(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        val receiverTextView: TextView = itemView.findViewById(R.id.receiverMessage)
-        val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
-        val filedetails = itemView.findViewById<TextView>(R.id.filedetails)
-        val imageView = itemView.findViewById<ImageView>(R.id.imageview)
-
-        fun bind(position: Int) {
-            val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            receiverTextView.text = messageList[position].mediaName
-            receiverTime.text = time
-            "${messageList[position].mediaExtension} - ${messageList[position].mediaSize?.let {
-                humanReadableByteCountSI(
-                    it
-                )
-            }}".also { filedetails.text = it }
-
-            when {
-                messageList[position].mediaExtension?.contains(Regex("application/pdf")) == true -> {
-                    imageView.setImageResource(R.drawable.pdf)
-                }
-                messageList[position].mediaExtension?.contains(Regex("image")) == true -> {
-                    imageView.setImageResource(R.drawable.image)
-                }
-                messageList[position].mediaExtension?.contains(Regex("audio")) == true -> {
-                    imageView.setImageResource(R.drawable.audio)
-                }
-                messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
-                    imageView.setImageResource(R.drawable.video)
-                }
-                else ->{
-                    imageView.setImageResource(R.drawable.file)
-                }
-            }
-        }
-    }
-
-    private inner class ViewHolder4(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        val senderTime = itemView.findViewById<TextView>(R.id.senderDocumentTime)
-        val filename = itemView.findViewById<TextView>(R.id.filename)
-        val senderStatus = itemView.findViewById<ImageView>(R.id.senderStatus)
-        val filedetails = itemView.findViewById<TextView>(R.id.filedetails)
-        val imageView = itemView.findViewById<ImageView>(R.id.imageview)
-
-        fun bind(position: Int) {
-            val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            senderTime.text = time
-            filename.text = messageList[position].mediaName
-            "${messageList[position].mediaExtension} - ${messageList[position].mediaSize?.let {
-                humanReadableByteCountSI(
-                    it
-                )
-            }}".also { filedetails.text = it }
-
-            when {
-                messageList[position].mediaExtension?.contains(Regex("application/pdf")) == true -> {
-                    imageView.setImageResource(R.drawable.pdf)
-                }
-                messageList[position].mediaExtension?.contains(Regex("image")) == true -> {
-                    imageView.setImageResource(R.drawable.image)
-                }
-                messageList[position].mediaExtension?.contains(Regex("audio")) == true -> {
-                    imageView.setImageResource(R.drawable.audio)
-                }
-                messageList[position].mediaExtension?.contains(Regex("video")) == true -> {
-                    imageView.setImageResource(R.drawable.video)
-                }
-                else ->{
-                    imageView.setImageResource(R.drawable.file)
-                }
-            }
-        }
-    }
-
-    fun setdata(data : List<ChatModel>)
-    {
+    fun setdata(data: List<ChatModel>, id: String) {
         this.messageList = data
         notifyDataSetChanged()
+
+        if (!this::installationId.isInitialized) {
+            installationId = id
+        }
     }
 
     fun getDate(milliSeconds: Long, dateFormat: String?): String? {
@@ -159,31 +84,29 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
-        when(viewType)
-        {
-            1 -> return ViewHolder1(LayoutInflater.from(context).inflate(R.layout.sender_layout, parent, false))
-            2 -> return ViewHolder2(LayoutInflater.from(context).inflate(R.layout.receiver_layout,parent,false))
-            3 -> return ViewHolder3(LayoutInflater.from(context).inflate(R.layout.receiver_document_layout,parent,false))
-            4 -> return ViewHolder4(LayoutInflater.from(context).inflate(R.layout.sender_document_layout,parent,false))
+        when (viewType) {
+            1 -> return ViewHolder1(
+                LayoutInflater.from(context).inflate(R.layout.sender_layout, parent, false)
+            )
+            2 -> return ViewHolder2(
+                LayoutInflater.from(context).inflate(R.layout.receiver_layout, parent, false)
+            )
         }
 
-        return ViewHolder2(LayoutInflater.from(context).inflate(R.layout.receiver_layout,parent,false))
+        return ViewHolder2(
+            LayoutInflater.from(context).inflate(R.layout.receiver_layout, parent, false)
+        )
     }
 
     override fun getItemViewType(position: Int): Int {
-        if(messageList[position].senderId == auth.uid)
-        {
-            when(messageList[position].mediaType) {
+        if (messageList[position].senderId == installationId) {
+            when (messageList[position].mediaType) {
                 0 -> return VIEW_TYPE_ONE
-                6 -> return VIEW_TYPE_FOUR
                 else -> VIEW_TYPE_TWO
             }
-        }
-        else
-        {
-            when(messageList[position].mediaType) {
+        } else {
+            when (messageList[position].mediaType) {
                 0 -> return VIEW_TYPE_TWO
-                6 -> return VIEW_TYPE_THREE
                 else -> VIEW_TYPE_TWO
             }
         }
@@ -191,72 +114,36 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (messageList[position].senderId == auth.uid) {
-            when(messageList[position].mediaType) {
+        if (messageList[position].senderId == installationId) {
+            when (messageList[position].mediaType) {
                 0 -> {
                     (holder as ViewHolder1).bind(position)
                     when (messageList[position].messageStatus) {
                         3 -> {
-                            Glide.with(context).load(R.drawable.seen).circleCrop().into(holder.senderSeen)
+                            Glide.with(context).load(R.drawable.seen).circleCrop()
+                                .into(holder.senderSeen)
                         }
                         0 -> {
-                            Glide.with(context).load(R.drawable.sending).circleCrop().into(holder.senderSeen)
+                            Glide.with(context).load(R.drawable.sending).circleCrop()
+                                .into(holder.senderSeen)
                         }
                         1 -> {
-                            Glide.with(context).load(R.drawable.sent).circleCrop().into(holder.senderSeen)
+                            Glide.with(context).load(R.drawable.sent).circleCrop()
+                                .into(holder.senderSeen)
                         }
                         2 -> {
-                            Glide.with(context).load(R.drawable.delivered).circleCrop().into(holder.senderSeen)
+                            Glide.with(context).load(R.drawable.delivered).circleCrop()
+                                .into(holder.senderSeen)
                         }
-                    }
-                }
-
-                6 ->{
-                    (holder as ViewHolder4).bind(position)
-                    when (messageList[position].messageStatus) {
-                        3 -> {
-                            Glide.with(context).load(R.drawable.seen).circleCrop().into(holder.senderStatus)
-                        }
-                        0 -> {
-                            Glide.with(context).load(R.drawable.sending).circleCrop().into(holder.senderStatus)
-                        }
-                        1 -> {
-                            Glide.with(context).load(R.drawable.sent).circleCrop().into(holder.senderStatus)
-                        }
-                        2 -> {
-                            Glide.with(context).load(R.drawable.delivered).circleCrop().into(holder.senderStatus)
-                        }
-                    }
-
-                    holder.itemView.setOnClickListener()
-                    {
-                        Toast.makeText(context,"you clicked a document",Toast.LENGTH_SHORT).show()
-                        openLink(messageList[position].mediaUrl.toString())
                     }
                 }
             }
-        }
-        else if(messageList[position].receiverId == auth.uid) {
-            when(messageList[position].mediaType) {
+        } else if (messageList[position].receiverId == installationId) {
+            when (messageList[position].mediaType) {
                 0 -> {
                     (holder as ViewHolder2).bind(position)
-                    if(messageList[position].receiverId == auth.uid && messageList[position].messageStatus == 2)
-                    {
+                    if (messageList[position].receiverId == installationId && messageList[position].messageStatus == 2) {
                         onItemSeenListener.onItemSeen(messageList[position])
-                    }
-                }
-
-                6 ->{
-                    (holder as ViewHolder3).bind(position)
-
-                    if(messageList[position].receiverId == auth.uid && messageList[position].messageStatus == 2)
-                    {
-                        onItemSeenListener.onItemSeen(messageList[position])
-                    }
-
-                    holder.itemView.setOnClickListener()
-                    {
-                        openLink(messageList[position].mediaUrl.toString())
                     }
                 }
             }
@@ -267,8 +154,7 @@ class ChatAdapter(private val context: Context, val onItemSeenListener : OnItemS
         return messageList.size
     }
 
-    private fun openLink(url : String)
-    {
+    private fun openLink(url: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             context.startActivity(browserIntent)
