@@ -1,27 +1,19 @@
 package com.adreal.birdmessenger.Adapter
 
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.adreal.birdmessenger.Activity.ChatActivity
-import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.UserModel
-import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.databinding.PeopleLayoutBinding
 import com.bumptech.glide.Glide
 import io.noties.markwon.Markwon
 import io.noties.markwon.movement.MovementMethodPlugin
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -59,7 +51,6 @@ class PeopleAdapter(
     }
 
     override fun onBindViewHolder(holder: myViewHolder, position: Int) {
-        Log.d("working","working")
         if (peopleList[position].imageByteArray.toString() == "null") {
             Glide.with(context)
                 .load(
@@ -79,13 +70,18 @@ class PeopleAdapter(
 
         holder.text.text = peopleList[position].userName
 
-        markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
+        if(peopleList[position].lastMessage == ""){
+            holder.lastMessage.isVisible = false
+        }else{
+            holder.lastMessage.isVisible = true
+            markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
+        }
 
         holder.unseenMessages.text = peopleList[position].unreadMessages.toString()
 
-        if (peopleList[position].lastMessageTimeStamp == null) {
+        if(peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()){
             holder.timeStamp.text = ""
-        } else {
+        }else{
             holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
         }
 
@@ -113,9 +109,18 @@ class PeopleAdapter(
             Log.d("payload", payloads.toString())
             holder.text.text = peopleList[position].userName
 
-            holder.lastMessage.text = peopleList[position].lastMessage
+            if(peopleList[position].lastMessage == ""){
+                holder.lastMessage.isVisible = false
+            }else{
+                holder.lastMessage.isVisible = true
+                markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
+            }
 
-            holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+            if(peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()){
+                holder.timeStamp.text = ""
+            }else{
+                holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+            }
 
             if (peopleList[position].unreadMessages == 0) {
                 holder.unseenMessages.text = ""
@@ -151,14 +156,19 @@ class PeopleAdapter(
                             break
                         }
                     }
-                } else {
-                    val iterator = peopleList.iterator()
-                    while(iterator.hasNext()){
-                        val index = peopleList.indexOf(iterator.next())
-                        peopleList[index] = data[index]
-                        notifyItemChanged(index,"hello")
-                    }
                 }
+            }else if(data.size > peopleList.size){
+                if(data[0].Id != peopleList[0].Id){
+                    peopleList.add(0,data[0])
+                    notifyItemInserted(0)
+                }
+            }
+
+            val iterator = peopleList.iterator()
+            while(iterator.hasNext()){
+                val index = peopleList.indexOf(iterator.next())
+                peopleList[index] = data[index]
+                notifyItemChanged(index,"hello")
             }
         }
     }

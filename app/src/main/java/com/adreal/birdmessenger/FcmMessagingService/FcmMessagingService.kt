@@ -1,7 +1,6 @@
 package com.adreal.birdmessenger.FcmMessagingService
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Icon
@@ -12,11 +11,8 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavDeepLinkBuilder
-import com.adreal.birdmessenger.Activity.ChatActivity
-import com.adreal.birdmessenger.Authentication
 import com.adreal.birdmessenger.BroadcastReceiver.Receiver
 import com.adreal.birdmessenger.Constants.Constants
-import com.adreal.birdmessenger.Constants.Constants.COMMON_FCM_TOPIC
 import com.adreal.birdmessenger.Constants.Constants.Users
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
@@ -25,17 +21,10 @@ import com.adreal.birdmessenger.Model.UserModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.Retrofit.SendChatObject
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.squareup.okhttp.MediaType
-import com.squareup.okhttp.OkHttpClient
-import com.squareup.okhttp.Request
-import com.squareup.okhttp.RequestBody
-import io.grpc.NameResolver.Args
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,7 +34,6 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.IOException
 import java.util.*
 
 

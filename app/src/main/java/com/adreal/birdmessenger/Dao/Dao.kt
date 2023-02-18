@@ -30,13 +30,10 @@ interface Dao {
     fun readAllUsers() : LiveData<List<UserModel>>
 
     @Query("update user set lastMessage = :msg, lastMessageTimeStamp = :time where Id = :id")
-    fun updateLastMessage(msg : String, time : Long, id : String)
+    fun updateLastMessage(msg: String, time: Long, id: String)
 
     @Query("update user set unreadMessages = 0 where Id = :id")
     fun resetUnseenMessageCount(id : String)
-
-//    @Query("update user set lastMessageTimestamp = :time where Id = :id")
-//    fun updateLastMessageTimestamp(time : Long, id : String)
 
     @Query("select * from message")
     fun readAllMessagesForWorker() : List<ChatModel>

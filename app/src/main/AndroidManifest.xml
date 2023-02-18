@@ -31,24 +31,9 @@
             android:name=".Activity.Info"
             android:exported="false" />
         <activity
-            android:name=".Activity.ChatActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
             android:name=".Activity.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings" />
-
-        <activity
-            android:name=".Activity.PeopleActivity"
-            android:exported="true">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-        </activity>
-
         <service
             android:name=".FcmMessagingService.FcmMessagingService"
             android:directBootAware="true"

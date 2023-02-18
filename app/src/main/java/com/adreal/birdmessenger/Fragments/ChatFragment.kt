@@ -24,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import kotlin.properties.Delegates
 
 
 class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
@@ -196,11 +195,8 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         val builder = context?.let { AlertDialog.Builder(it) }
         builder?.setPositiveButton("Yes") { _, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                context?.let {
-                    Database.getDatabase(it).Dao().deleteAllChatsBetweenUsers(
-                        SharedPreferences.read("installationId", "").toString(), receiverId
-                    )
-                }
+                Database.getDatabase(requireContext()).Dao().deleteAllChatsBetweenUsers(SharedPreferences.read("installationId", "").toString(), receiverId)
+                Database.getDatabase(requireContext()).Dao().updateLastMessage("",0,receiverId)
             }
         }
         builder?.setNegativeButton("No") { _, _ ->
