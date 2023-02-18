@@ -111,6 +111,8 @@ class PeopleAdapter(
             super.onBindViewHolder(holder, position, payloads)
         }else{
             Log.d("payload", payloads.toString())
+            holder.text.text = peopleList[position].userName
+
             holder.lastMessage.text = peopleList[position].lastMessage
 
             holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
@@ -130,7 +132,7 @@ class PeopleAdapter(
     fun setData(data: List<UserModel>) {
         if(peopleList.isEmpty()){
             Log.d("list", "initialized")
-            peopleList = data as MutableList<UserModel>
+            peopleList.addAll(data)
             notifyItemRangeChanged(0,data.size)
         }else{
             if (data.size == peopleList.size) {
@@ -145,12 +147,17 @@ class PeopleAdapter(
                             notifyItemMoved(index, 0)
                             peopleList[0] = data[0]
                             notifyItemChanged(0)
+                            notifyItemChanged(index)
                             break
                         }
                     }
                 } else {
-                    peopleList[0] = data[0]
-                    notifyItemChanged(0, "hello")
+                    val iterator = peopleList.iterator()
+                    while(iterator.hasNext()){
+                        val index = peopleList.indexOf(iterator.next())
+                        peopleList[index] = data[index]
+                        notifyItemChanged(index,"hello")
+                    }
                 }
             }
         }

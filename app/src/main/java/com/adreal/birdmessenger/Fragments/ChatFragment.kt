@@ -9,6 +9,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Database.Database
@@ -53,7 +54,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     lateinit var receiverName: String
     private var listSizeCount = 0
     lateinit var senderId: String
-    var fromNotification  = false
+    var fromNotification = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,13 +71,16 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         binding.toolbar.setOnMenuItemClickListener()
         {
-            when(it.itemId)
-            {
-                R.id.delete ->{
+            when (it.itemId) {
+                R.id.delete -> {
                     showDeleteDialog()
                 }
             }
             true
+        }
+
+        binding.toolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
         }
 
         val popup = EmojiPopup.Builder.fromRootView(binding.root).build(binding.edittext)
@@ -107,10 +111,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         {
             if (it.size > listSizeCount) {
                 listSizeCount = it.size
-                adapter?.setdata(it,senderId)
+                adapter?.setData(it, senderId)
                 recyclerView.scrollToPosition(it.size - 1)
             } else {
-                adapter?.setdata(it,senderId)
+                adapter?.setData(it, senderId)
             }
         }
 
@@ -169,33 +173,37 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         receiverName = arguments?.getString("receiverName", "").toString()
         receiverToken = arguments?.getString("receiverToken", "").toString()
         senderId = SharedPreferences.read("installationId", "").toString()
-        fromNotification = arguments?.getBoolean("fromNotification",false) == true
+        fromNotification = arguments?.getBoolean("fromNotification", false) == true
         binding.toolbar.title = receiverName
     }
 
     override fun onItemSeen(data: ChatModel) {
-        if(data.senderId == receiverId){
+        if (data.senderId == receiverId) {
             CoroutineScope(Dispatchers.IO).launch {
                 val jsonObject = JSONObject()
                 val dataJson = JSONObject()
-                jsonObject.put("id",data.messageId)
-                    .put("messageStatus",3)
-                    .put("category","seen")
-                dataJson.put("data",jsonObject)
-                    .put("to",receiverToken)
-                chatViewModel.send(dataJson.toString(),data)
+                jsonObject.put("id", data.messageId)
+                    .put("messageStatus", 3)
+                    .put("category", "seen")
+                dataJson.put("data", jsonObject)
+                    .put("to", receiverToken)
+                chatViewModel.send(dataJson.toString(), data)
             }
         }
     }
 
-    private fun showDeleteDialog(){
+    private fun showDeleteDialog() {
         val builder = context?.let { AlertDialog.Builder(it) }
-        builder?.setPositiveButton("Yes"){ _, _->
+        builder?.setPositiveButton("Yes") { _, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                context?.let { Database.getDatabase(it).Dao().deleteAllChatsBetweenUsers(SharedPreferences.read("installationId", "").toString(),receiverId) }
+                context?.let {
+                    Database.getDatabase(it).Dao().deleteAllChatsBetweenUsers(
+                        SharedPreferences.read("installationId", "").toString(), receiverId
+                    )
+                }
             }
         }
-        builder?.setNegativeButton("No"){ _, _->
+        builder?.setNegativeButton("No") { _, _ ->
 
         }
         builder?.setTitle("Delete Everything")
@@ -204,12 +212,12 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     }
 
     override fun onStart() {
-        SharedPreferences.write(receiverId,"y")
+        SharedPreferences.write(receiverId, "y")
         super.onStart()
     }
 
     override fun onStop() {
-        SharedPreferences.write(receiverId,"n")
+        SharedPreferences.write(receiverId, "n")
         super.onStop()
     }
 }

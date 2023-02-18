@@ -47,15 +47,15 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
     private lateinit var onlineViewModel: OnlineViewModel
     private lateinit var offlineViewModel: OfflineViewModel
     private lateinit var connectionLiveData: ConnectionLiveData
-    private lateinit var senderToken : String
-    private lateinit var senderName : String
-    private lateinit var receiverName : String
-    private lateinit var receiverToken : String
-    private lateinit var receiverImage : String
+    private lateinit var senderToken: String
+    private lateinit var senderName: String
+    private lateinit var receiverName: String
+    private lateinit var receiverToken: String
+    private lateinit var receiverImage: String
     private val storage = Firebase.storage
-    lateinit var receiverId : String
+    lateinit var receiverId: String
     lateinit var sharedPreferencesForOpen: SharedPreferences
-    lateinit var edit : SharedPreferences.Editor
+    lateinit var edit: SharedPreferences.Editor
     private var fromNotification = false
     var listSizeCount = 0
     private val auth = Firebase.auth
@@ -79,12 +79,9 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         binding.emoji.setOnClickListener()
         {
-            if(popup.isShowing)
-            {
+            if (popup.isShowing) {
                 binding.emoji.setImageResource(R.drawable.emoji_notfilled)
-            }
-            else
-            {
+            } else {
                 binding.emoji.setImageResource(R.drawable.keyboard)
             }
             popup.toggle()
@@ -94,7 +91,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         receiverToken = intent.getStringExtra("receiverToken").toString()
         receiverId = intent.getStringExtra("receiverId").toString()
         //receiverImage = intent.getStringExtra("receiverImage").toString()
-        fromNotification = intent.getBooleanExtra("fromNotification",false)
+        fromNotification = intent.getBooleanExtra("fromNotification", false)
 
         offlineViewModel.initUserImage(receiverId)
 
@@ -103,14 +100,11 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         binding.toolbar.title = receiverName
 
         binding.edittext.addTextChangedListener {
-            if(binding.edittext.text.toString() != "")
-            {
+            if (binding.edittext.text.toString() != "") {
                 binding.camera.isVisible = false
                 binding.attachment.isVisible = false
                 binding.fab.setImageResource(R.drawable.send)
-            }
-            else
-            {
+            } else {
                 binding.camera.isVisible = true
                 binding.attachment.isVisible = true
                 binding.fab.setImageResource(R.drawable.mic)
@@ -119,9 +113,8 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         binding.toolbar.setOnMenuItemClickListener()
         {
-            when(it.itemId)
-            {
-                R.id.delete ->{
+            when (it.itemId) {
+                R.id.delete -> {
                     showDeleteDialog()
                 }
             }
@@ -130,8 +123,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         binding.fab.setOnClickListener()
         {
-            if(binding.edittext.text.isNotEmpty())
-            {
+            if (binding.edittext.text.isNotEmpty()) {
                 val jsonObject = JSONObject()
                 val dataJson = JSONObject()
                 val priority = JSONObject()
@@ -154,49 +146,46 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 //                    0
 //                )
 
-                jsonObject.put("id",id)
-                jsonObject.put("senderId",auth.uid)
-                jsonObject.put("senderToken",senderToken)
-                jsonObject.put("sendTime",id)
-                jsonObject.put("senderName",senderName)
-                jsonObject.put("receiverId",receiverId)
-                jsonObject.put("receiverToken",receiverToken)
-                jsonObject.put("receiveTime",id)
-                jsonObject.put("msg",msg)
-                jsonObject.put("messageStatus",0)
-                jsonObject.put("mediaType",0)
-                jsonObject.put("category","chat")
+                jsonObject.put("id", id)
+                jsonObject.put("senderId", auth.uid)
+                jsonObject.put("senderToken", senderToken)
+                jsonObject.put("sendTime", id)
+                jsonObject.put("senderName", senderName)
+                jsonObject.put("receiverId", receiverId)
+                jsonObject.put("receiverToken", receiverToken)
+                jsonObject.put("receiveTime", id)
+                jsonObject.put("msg", msg)
+                jsonObject.put("messageStatus", 0)
+                jsonObject.put("mediaType", 0)
+                jsonObject.put("category", "chat")
 
-                dataJson.put("data",jsonObject)
-                dataJson.put("android",priority)
-                dataJson.put("to",receiverToken)
+                dataJson.put("data", jsonObject)
+                dataJson.put("android", priority)
+                dataJson.put("to", receiverToken)
 
-                priority.put("priority","high")
+                priority.put("priority", "high")
 
-                message.put("message",dataJson)
+                message.put("message", dataJson)
 
-                onlineViewModel.sendData(dataJson.toString(),jsonObject)
+                onlineViewModel.sendData(dataJson.toString(), jsonObject)
 //                offlineViewModel.addChatData(data)
             }
         }
 
         onlineViewModel.liveData.observe(this)
         {
-            Log.d("Live data value",it)
+            Log.d("Live data value", it)
             binding.toolbar.subtitle = it
         }
 
-        offlineViewModel.readAllMessages(auth.uid!!,receiverId).observe(this)
+        offlineViewModel.readAllMessages(auth.uid!!, receiverId).observe(this)
         {
-            if(it.size>listSizeCount)
-            {
+            if (it.size > listSizeCount) {
                 listSizeCount = it.size
-                adapter.setdata(it,senderName)
+                adapter.setData(it, senderName)
                 recyclerView.scrollToPosition(it.size - 1)
-            }
-            else
-            {
-                adapter.setdata(it,senderName)
+            } else {
+                adapter.setData(it, senderName)
             }
         }
 
@@ -225,14 +214,13 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
         connectionLiveData.observe(this)
         { isNetworkAvailable ->
-            if(isNetworkAvailable == false)
-            {
+            if (isNetworkAvailable == false) {
                 offlineViewModel.setupWorkManager()
             }
         }
     }
 
-    private fun initViewModel(){
+    private fun initViewModel() {
         onlineViewModel = ViewModelProvider(this).get(OnlineViewModel::class.java)
         offlineViewModel = ViewModelProvider(this).get(OfflineViewModel::class.java)
         connectionLiveData = ConnectionLiveData(this)
@@ -244,7 +232,7 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 //    }
 
     override fun onNewIntent(intent: Intent?) {
-        Log.d("new intent is passed","")
+        Log.d("new intent is passed", "")
         super.onNewIntent(intent)
     }
 
@@ -253,33 +241,32 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
-    private fun initSharedPreferences()
-    {
-        val sharedPreferences = this.getSharedPreferences("myData",Context.MODE_PRIVATE)
-        senderToken = sharedPreferences.getString("token","null").toString()
-        senderName = sharedPreferences.getString("name","null").toString()
+    private fun initSharedPreferences() {
+        val sharedPreferences = this.getSharedPreferences("myData", Context.MODE_PRIVATE)
+        senderToken = sharedPreferences.getString("token", "null").toString()
+        senderName = sharedPreferences.getString("name", "null").toString()
 
-        sharedPreferencesForOpen = this.getSharedPreferences("isOpen",Context.MODE_PRIVATE)
+        sharedPreferencesForOpen = this.getSharedPreferences("isOpen", Context.MODE_PRIVATE)
         edit = sharedPreferencesForOpen.edit()
-        Log.d("activity","initialized")
+        Log.d("activity", "initialized")
     }
 
-    private fun initRecycler()
-    {
-        adapter = ChatAdapter(this,this)
+    private fun initRecycler() {
+        adapter = ChatAdapter(this, this)
         recyclerView = binding.recyclerView
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun showDeleteDialog(){
+    private fun showDeleteDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setPositiveButton("Yes"){_,_->
+        builder.setPositiveButton("Yes") { _, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                Database.getDatabase(applicationContext).Dao().deleteAllChatsBetweenUsers(auth.uid.toString(),receiverId)
+                Database.getDatabase(applicationContext).Dao()
+                    .deleteAllChatsBetweenUsers(auth.uid.toString(), receiverId)
             }
         }
-        builder.setNegativeButton("No"){_,_->
+        builder.setNegativeButton("No") { _, _ ->
 
         }
         builder.setTitle("Delete Everything")
@@ -291,66 +278,62 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         data.messageStatus = 3
         val jsonObject = JSONObject()
         val dataJson = JSONObject()
-        jsonObject.put("id",data.messageId)
-            .put("messageStatus",3)
-            .put("mediaType",0)
-            .put("category","seen")
-        dataJson.put("data",jsonObject)
+        jsonObject.put("id", data.messageId)
+            .put("messageStatus", 3)
+            .put("mediaType", 0)
+            .put("category", "seen")
+        dataJson.put("data", jsonObject)
 //            .put("to",data.senderToken)
-        onlineViewModel.sendData(dataJson.toString(),jsonObject)
+        onlineViewModel.sendData(dataJson.toString(), jsonObject)
     }
 
     override fun onPause() {
-        edit.putString(receiverId,"no")
+        edit.putString(receiverId, "no")
         edit.apply()
-        Log.d("activity","paused")
+        Log.d("activity", "paused")
         onlineViewModel.setStatus("offline")
         super.onPause()
     }
 
     override fun onBackPressed() {
-        if(fromNotification)
-        {
+        if (fromNotification) {
             val intent = Intent(this, PeopleActivity::class.java)
             startActivity(intent)
-        }
-        else
-        {
+        } else {
             finish()
         }
         super.onBackPressed()
     }
 
     override fun onStop() {
-        edit.putString(receiverId,"no")
+        edit.putString(receiverId, "no")
         edit.apply()
-        Log.d("activity","stopped")
+        Log.d("activity", "stopped")
         onlineViewModel.setStatus("offline")
         super.onStop()
     }
 
     override fun onResume() {
-        edit.putString(receiverId,"yes")
+        edit.putString(receiverId, "yes")
         edit.apply()
-        Log.d("activity","resumed")
+        Log.d("activity", "resumed")
         onlineViewModel.setStatus("online")
         super.onResume()
     }
 
     override fun onRestart() {
-        edit.putString(receiverId,"yes")
+        edit.putString(receiverId, "yes")
         edit.apply()
-        Log.d("activity","restarted")
+        Log.d("activity", "restarted")
         onlineViewModel.setStatus("online")
         super.onRestart()
     }
 
     override fun onStart() {
-        edit.putString(receiverId,"yes")
+        edit.putString(receiverId, "yes")
         edit.apply()
-        Log.d("activity","started $receiverId")
-        if(fromNotification)
-        {
+        Log.d("activity", "started $receiverId")
+        if (fromNotification) {
             val manager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.cancelAll()
         }
@@ -382,15 +365,14 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        if(requestCode == 2 && resultCode == RESULT_OK)
-        {
-            if(data!=null) {
+        if (requestCode == 2 && resultCode == RESULT_OK) {
+            if (data != null) {
 
-                Log.d("activity result","running")
+                Log.d("activity result", "running")
 
                 val mimeType = data.data?.let { contentResolver.getType(it) }
 
-                val cursor = data.data?.let { contentResolver.query(it,null,null,null) }
+                val cursor = data.data?.let { contentResolver.query(it, null, null, null) }
 
                 val nameIndex = cursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME)
 
@@ -404,11 +386,18 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 
                 cursor?.close()
 
-                Log.d("file data","$mimeType $nameOfFile $sizeOfFile")
+                Log.d("file data", "$mimeType $nameOfFile $sizeOfFile")
 
                 val id = System.currentTimeMillis()
 
-                createDocumentModel("", mimeType.toString(), nameOfFile.toString(), sizeOfFile, id, data.data)
+                createDocumentModel(
+                    "",
+                    mimeType.toString(),
+                    nameOfFile.toString(),
+                    sizeOfFile,
+                    id,
+                    data.data
+                )
 
                 //onlineViewModel.uploadToFirebase(data.data, id)
             }
@@ -416,31 +405,42 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun uploadToFirebase(uri: Uri?, id : Long, data : ChatModel, json : JSONObject, dataJson : JSONObject)
-    {
+    private fun uploadToFirebase(
+        uri: Uri?,
+        id: Long,
+        data: ChatModel,
+        json: JSONObject,
+        dataJson: JSONObject
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             val uploadTask = uri?.let { storage.reference.child("${auth.uid}/$id").putFile(it) }
 
             uploadTask?.addOnFailureListener {
-                Log.d("File Uploading","failed")
+                Log.d("File Uploading", "failed")
             }?.addOnSuccessListener {
-                storage.reference.child("${auth.uid}/$id").downloadUrl.addOnSuccessListener{
-                    Log.d("Download Url","retrieved $it")
+                storage.reference.child("${auth.uid}/$id").downloadUrl.addOnSuccessListener {
+                    Log.d("Download Url", "retrieved $it")
 //                    data.mediaUrl = it.toString()
-                    json.put("mediaUrl",it)
+                    json.put("mediaUrl", it)
                     offlineViewModel.updateChatData(data)
-                    onlineViewModel.sendData(dataJson.toString(),json)
+                    onlineViewModel.sendData(dataJson.toString(), json)
 
-                }.addOnFailureListener{
-                    Log.d("Download Url","retrieval failed")
+                }.addOnFailureListener {
+                    Log.d("Download Url", "retrieval failed")
                 }
-                Log.d("File Uploading","success")
+                Log.d("File Uploading", "success")
             }
         }
     }
 
-    private fun createDocumentModel(url: String, mime: String, name: String, size: Long?, id : Long, uri : Uri?)
-    {
+    private fun createDocumentModel(
+        url: String,
+        mime: String,
+        name: String,
+        size: Long?,
+        id: Long,
+        uri: Uri?
+    ) {
         val jsonObject = JSONObject()
         val dataJson = JSONObject()
         val priority = JSONObject()
@@ -460,28 +460,28 @@ class ChatActivity : AppCompatActivity(), ChatAdapter.OnItemSeenListener {
 //            6
 //        )
 
-        jsonObject.put("id",id)
-        jsonObject.put("senderId",auth.uid)
-        jsonObject.put("senderToken",senderToken)
-        jsonObject.put("sendTime",id)
-        jsonObject.put("senderName",senderName)
-        jsonObject.put("receiverId",receiverId)
-        jsonObject.put("receiverToken",receiverToken)
-        jsonObject.put("receiveTime",id)
-        jsonObject.put("messageStatus",0)
-        jsonObject.put("category","doc")
-        jsonObject.put("mediaType",6)
-        jsonObject.put("mediaExtension",mime)
-        jsonObject.put("mediaSize",size)
-        jsonObject.put("mediaName",name)
+        jsonObject.put("id", id)
+        jsonObject.put("senderId", auth.uid)
+        jsonObject.put("senderToken", senderToken)
+        jsonObject.put("sendTime", id)
+        jsonObject.put("senderName", senderName)
+        jsonObject.put("receiverId", receiverId)
+        jsonObject.put("receiverToken", receiverToken)
+        jsonObject.put("receiveTime", id)
+        jsonObject.put("messageStatus", 0)
+        jsonObject.put("category", "doc")
+        jsonObject.put("mediaType", 6)
+        jsonObject.put("mediaExtension", mime)
+        jsonObject.put("mediaSize", size)
+        jsonObject.put("mediaName", name)
 
-        dataJson.put("data",jsonObject)
-        dataJson.put("android",priority)
-        dataJson.put("to",receiverToken)
+        dataJson.put("data", jsonObject)
+        dataJson.put("android", priority)
+        dataJson.put("to", receiverToken)
 
-        priority.put("priority","high")
+        priority.put("priority", "high")
 
-        message.put("message",dataJson)
+        message.put("message", dataJson)
 
 //        offlineViewModel.addChatData(data)
 

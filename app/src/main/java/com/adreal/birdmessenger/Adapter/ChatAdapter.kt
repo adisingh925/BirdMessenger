@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import io.noties.markwon.Markwon
@@ -24,6 +25,7 @@ import java.text.CharacterIterator
 import java.text.SimpleDateFormat
 import java.text.StringCharacterIterator
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class ChatAdapter(
@@ -31,7 +33,7 @@ class ChatAdapter(
     private val onItemSeenListener: OnItemSeenListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var messageList = emptyList<ChatModel>()
+    private var messageList : MutableList<ChatModel> = ArrayList()
     lateinit var installationId: String
 
     private val markWon by lazy {
@@ -71,12 +73,85 @@ class ChatAdapter(
         }
     }
 
-    fun setdata(data: List<ChatModel>, id: String) {
-        this.messageList = data
-        notifyItemInserted(data.size)
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if(payloads.isEmpty()){
+            super.onBindViewHolder(holder, position, payloads)
+        }else{
+            if (messageList[position].senderId == installationId) {
+                when (messageList[position].mediaType) {
+                    0 -> {
+                        (holder as ViewHolder1).bind(position)
+                        when (messageList[position].messageStatus) {
+                            3 -> {
+                                Glide.with(context).load(R.drawable.seen).circleCrop().transition(
+                                    DrawableTransitionOptions.withCrossFade()
+                                )
+                                    .into(holder.senderSeen)
+                            }
+                            0 -> {
+                                Glide.with(context).load(R.drawable.sending).circleCrop().transition(
+                                    DrawableTransitionOptions.withCrossFade()
+                                )
+                                    .into(holder.senderSeen)
+                            }
+                            1 -> {
+                                Glide.with(context).load(R.drawable.sent).circleCrop().transition(
+                                    DrawableTransitionOptions.withCrossFade()
+                                )
+                                    .into(holder.senderSeen)
+                            }
+                            2 -> {
+                                Glide.with(context).load(R.drawable.delivered).circleCrop().transition(
+                                    DrawableTransitionOptions.withCrossFade()
+                                )
+                                    .into(holder.senderSeen)
+                            }
+                        }
+                    }
+                }
+            } else if (messageList[position].receiverId == installationId) {
+                when (messageList[position].mediaType) {
+                    0 -> {
+                        (holder as ViewHolder2).bind(position)
+                        if (messageList[position].receiverId == installationId && messageList[position].messageStatus == 2) {
+                            onItemSeenListener.onItemSeen(messageList[position])
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun setData(data: List<ChatModel>, id: String) {
 
         if (!this::installationId.isInitialized) {
             installationId = id
+        }
+
+        if(messageList.isEmpty()){
+            messageList.addAll(data)
+            notifyItemRangeChanged(0,data.size)
+        }else{
+            if(data.isNotEmpty()){
+                if(messageList.size != data.size){
+                    messageList.add(data.last())
+                    notifyItemInserted(messageList.size - 1)
+                }
+
+                for(i in messageList.lastIndex downTo 0){
+                    if(messageList[i] != data[i]){
+                        messageList[i] = data[i]
+                        notifyItemChanged(i,"hello")
+                    }
+                }
+            }else{
+                notifyItemRangeRemoved(0, messageList.size)
+                messageList.clear()
+            }
         }
     }
 
@@ -126,19 +201,27 @@ class ChatAdapter(
                     (holder as ViewHolder1).bind(position)
                     when (messageList[position].messageStatus) {
                         3 -> {
-                            Glide.with(context).load(R.drawable.seen).circleCrop()
+                            Glide.with(context).load(R.drawable.seen).circleCrop().transition(
+                                DrawableTransitionOptions.withCrossFade()
+                            )
                                 .into(holder.senderSeen)
                         }
                         0 -> {
-                            Glide.with(context).load(R.drawable.sending).circleCrop()
+                            Glide.with(context).load(R.drawable.sending).circleCrop().transition(
+                                DrawableTransitionOptions.withCrossFade()
+                            )
                                 .into(holder.senderSeen)
                         }
                         1 -> {
-                            Glide.with(context).load(R.drawable.sent).circleCrop()
+                            Glide.with(context).load(R.drawable.sent).circleCrop().transition(
+                                DrawableTransitionOptions.withCrossFade()
+                            )
                                 .into(holder.senderSeen)
                         }
                         2 -> {
-                            Glide.with(context).load(R.drawable.delivered).circleCrop()
+                            Glide.with(context).load(R.drawable.delivered).circleCrop().transition(
+                                DrawableTransitionOptions.withCrossFade()
+                            )
                                 .into(holder.senderSeen)
                         }
                     }
