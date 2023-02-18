@@ -49,9 +49,21 @@ import java.io.IOException
 import java.util.*
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 class FcmMessagingService : FirebaseMessagingService() {
 
     private val firestore = Firebase.firestore
+    var needsAgain = 1
+
+    private val notificationManager by lazy{
+        getSystemService(
+            NotificationManager::class.java
+        )
+    }
+
+    private val builder by lazy {
+        Notification.Builder(this, CHANNEL_ID)
+    }
 
     companion object {
         const val CHANNEL_ID = "chat_notification"
@@ -204,9 +216,7 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        var data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
-
-        data = data.asReversed()
+        val data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId).asReversed()
 
         val imageString = Database.getDatabase(applicationContext).Dao().readImageStringForUser(senderId)
         val imageBytes = Base64.decode(imageString, 0)
@@ -284,57 +294,59 @@ class FcmMessagingService : FirebaseMessagingService() {
         senderName: String,
         senderToken: String
     ) {
-        val cancelIntent = Intent(this, Receiver::class.java)
-        cancelIntent.putExtra("notificationId", notificationId)
+        if(needsAgain == 1){
+            val cancelIntent = Intent(this, Receiver::class.java)
+            cancelIntent.putExtra("notificationId", notificationId)
 
-        val pendingCancelIntent = PendingIntent.getBroadcast(
-            this, notificationId + 2, cancelIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val deleteIntent = Intent(this, Receiver::class.java)
-        deleteIntent.putExtra("delete", "y")
-
-        val deletePendingIntent = PendingIntent.getActivity(
-            this,
-            notificationId + 3,
-            deleteIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val args = Bundle()
-        args.putString("receiverId", senderId)
-        args.putString("receiverName", senderName)
-        args.putString("receiverToken", senderToken)
-        args.putBoolean("fromNotification", true)
-
-        val pendingIntent = NavDeepLinkBuilder(this)
-            .setGraph(R.navigation.main_navigation)
-            .setDestination(R.id.chatFragment)
-            .setArguments(args)
-            .createPendingIntent()
-
-        val notificationManager = getSystemService(
-            NotificationManager::class.java
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
+            val pendingCancelIntent = PendingIntent.getBroadcast(
+                this, notificationId + 2, cancelIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            channel.description = CHANNEL_DESCRIPTION
-            notificationManager.createNotificationChannel(channel)
-        }
 
-        val builder = Notification.Builder(this, CHANNEL_ID)
-        builder.setSmallIcon(R.drawable.app_icon)
-        builder.style = style
-        builder.setContentIntent(pendingIntent)
-        builder.setDeleteIntent(deletePendingIntent)
-        builder.addAction(R.drawable.cancel, "Cancel", pendingCancelIntent)
-        builder.setAutoCancel(true)
-        builder.setShowWhen(true)
+            val deleteIntent = Intent(this, Receiver::class.java)
+            deleteIntent.putExtra("delete", "y")
+
+            val deletePendingIntent = PendingIntent.getActivity(
+                this,
+                notificationId + 3,
+                deleteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val args = Bundle()
+            args.putString("receiverId", senderId)
+            args.putString("receiverName", senderName)
+            args.putString("receiverToken", senderToken)
+            args.putBoolean("fromNotification", true)
+
+            val pendingIntent = NavDeepLinkBuilder(this)
+                .setGraph(R.navigation.main_navigation)
+                .setDestination(R.id.chatFragment)
+                .setArguments(args)
+                .createPendingIntent()
+
+//            val notificationManager = getSystemService(
+//                NotificationManager::class.java
+//            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+                channel.description = CHANNEL_DESCRIPTION
+                notificationManager.createNotificationChannel(channel)
+            }
+
+//            val builder = Notification.Builder(this, CHANNEL_ID)
+            builder.setSmallIcon(R.drawable.app_icon)
+            builder.style = style
+            builder.setContentIntent(pendingIntent)
+            builder.setDeleteIntent(deletePendingIntent)
+            builder.addAction(R.drawable.cancel, "Cancel", pendingCancelIntent)
+            builder.setAutoCancel(true)
+            builder.setShowWhen(true)
+        }
 
         with(NotificationManagerCompat.from(this)) {
             notificationManager.notify(notificationId, builder.build())

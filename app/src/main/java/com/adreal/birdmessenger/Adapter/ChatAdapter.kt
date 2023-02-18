@@ -15,6 +15,8 @@ import com.adreal.birdmessenger.R
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import io.noties.markwon.Markwon
+import io.noties.markwon.movement.MovementMethodPlugin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,6 +34,10 @@ class ChatAdapter(
     private var messageList = emptyList<ChatModel>()
     lateinit var installationId: String
 
+    private val markWon by lazy {
+        context.let { Markwon.builder(context).usePlugin(MovementMethodPlugin.none()).build() }
+    }
+
     interface OnItemSeenListener {
         fun onItemSeen(data: ChatModel)
     }
@@ -48,7 +54,7 @@ class ChatAdapter(
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].sendTime.toString().toLong(), "hh:mm aa")
-            senderTextView.text = messageList[position].msg
+            markWon.setMarkdown(senderTextView, messageList[position].msg.toString())
             senderTime.text = time
         }
     }
@@ -60,14 +66,14 @@ class ChatAdapter(
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            receiverTextView.text = messageList[position].msg
+            markWon.setMarkdown(receiverTextView, messageList[position].msg.toString())
             receiverTime.text = time
         }
     }
 
     fun setdata(data: List<ChatModel>, id: String) {
         this.messageList = data
-        notifyDataSetChanged()
+        notifyItemInserted(data.size)
 
         if (!this::installationId.isInitialized) {
             installationId = id

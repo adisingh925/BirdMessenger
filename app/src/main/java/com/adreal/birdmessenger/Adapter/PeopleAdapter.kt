@@ -86,8 +86,7 @@ class PeopleAdapter(
         if (peopleList[position].lastMessageTimeStamp == null) {
             holder.timeStamp.text = ""
         } else {
-            holder.timeStamp.text =
-                getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+            holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
         }
 
         if (peopleList[position].unreadMessages == 0) {
@@ -134,22 +133,22 @@ class PeopleAdapter(
             peopleList = data as MutableList<UserModel>
             notifyItemRangeChanged(0,data.size)
         }else{
-            Log.d("changed data",data[0].Id + "  " + peopleList[0].Id)
-            if(data.size == peopleList.size){
-                if(data[0].Id != peopleList[0].Id){
-                    for(i in peopleList){
-                        if(i.Id == data[0].Id){
-                            val index = peopleList.indexOf(i)
-                            peopleList.removeAt(index)
-                            peopleList.add(0,data[0])
-
-                            notifyItemMoved(index,0)
-
+            if (data.size == peopleList.size) {
+                if (data[0].Id != peopleList[0].Id) {
+                    val iterator = peopleList.iterator()
+                    while (iterator.hasNext()) {
+                        val person = iterator.next()
+                        if (person.Id == data[0].Id) {
+                            val index = peopleList.indexOf(person)
+                            iterator.remove()
+                            peopleList.add(0, data[0])
+                            notifyItemMoved(index, 0)
                             peopleList[0] = data[0]
                             notifyItemChanged(0)
+                            break
                         }
                     }
-                }else{
+                } else {
                     peopleList[0] = data[0]
                     notifyItemChanged(0, "hello")
                 }

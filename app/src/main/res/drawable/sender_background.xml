@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/blue"/>
+            <solid android:color="@color/teal_700"/>
             <corners android:topRightRadius="45dp"
                 android:topLeftRadius="25dp"
                 android:bottomRightRadius="25dp"
@@ -11,7 +11,7 @@
     </item>
     <item android:right="8dp">
         <shape android:shape="rectangle">
-            <solid android:color="@color/blue"/>
+            <solid android:color="@color/teal_700"/>
             <corners android:topRightRadius="45dp"
                 android:topLeftRadius="25dp"
                 android:bottomLeftRadius="45dp"
