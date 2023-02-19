@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="4dp"
         android:elevation="4dp"
         android:background="@drawable/sender_background"
@@ -21,55 +21,54 @@
             android:id="@+id/senderMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
             android:autoLink="all"
-            android:maxWidth="270dp"
             android:textIsSelectable="true"
-            android:minWidth="50dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:paddingEnd="4dp"
-            android:paddingStart="8dp"
+            android:textSize="14sp"
             android:textColor="?attr/font_color"
-            app:layout_constraintEnd_toStartOf="@+id/guideline3"
+            app:layout_constraintBottom_toTopOf="@id/senderStatus"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/senderTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintRight_toLeftOf="@id/senderStatus"
+            app:layout_constraintBottom_toBottomOf="@id/senderStatus"
+            app:layout_constraintTop_toTopOf="@id/senderStatus"
+            android:layout_marginEnd="5dp"
+            android:layout_alignParentEnd="true"
+            android:fontFamily="sans-serif"
+            android:gravity="end"
+            android:textColor="?attr/font_color"
+            android:textSize="9sp" />
 
         <ImageView
             android:id="@+id/senderStatus"
             android:layout_width="12dp"
             android:layout_height="12dp"
-            android:layout_marginTop="4dp"
             android:fontFamily="sans-serif-condensed"
             android:src="@drawable/sending"
-            android:textSize="11sp"
             android:textColor="?attr/font_color"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline3"
-            app:layout_constraintTop_toBottomOf="@id/senderMessage"
+            app:layout_constraintEnd_toEndOf="parent"
             app:tint="@color/white" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.90" />
+<!--        <androidx.constraintlayout.widget.Guideline-->
+<!--            android:id="@+id/guideline3"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="vertical"-->
+<!--            app:layout_constraintGuide_percent="0.90" />-->
+
+<!--        <androidx.constraintlayout.widget.Guideline-->
+<!--            android:id="@+id/guideline4"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:orientation="vertical"-->
+<!--            app:layout_constraintGuide_percent="0.1"-->
+<!--            android:layout_height="wrap_content"/>-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/senderTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/constraintLayout"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:fontFamily="sans-serif"
-        android:gravity="end"
-        android:textColor="?attr/font_color"
-        android:textSize="11sp" />
 
 </RelativeLayout>

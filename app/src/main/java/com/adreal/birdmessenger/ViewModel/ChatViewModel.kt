@@ -1,8 +1,11 @@
 package com.adreal.birdmessenger.ViewModel
 
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.adreal.birdmessenger.Constants.Constants
@@ -128,5 +131,39 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().resetUnseenMessageCount(id)
         }
+    }
+
+    private val typingHandler = Handler(Looper.getMainLooper())
+
+    private var isTyping = false
+
+    // local mock status to show typing status on ui
+    private val _mockStatus = MutableLiveData(false)
+    val mockLiveStatus: LiveData<Boolean> = _mockStatus
+
+    /*
+    called on onTextChange */
+    fun startTyping(msg: String){
+        if (msg.isEmpty()) {
+            if (isTyping){
+                removeTypingCallbacks()
+                _mockStatus.value=false
+            }
+            isTyping = false
+        } else if (!isTyping) {
+            _mockStatus.value= true
+            isTyping = true
+            typingHandler.postDelayed(typingThread, 3000)
+        }
+
+    }
+
+    private val typingThread = Runnable {
+        _mockStatus.value= false
+        isTyping = false
+    }
+
+    private fun removeTypingCallbacks() {
+        typingHandler.removeCallbacks(typingThread)
     }
 }

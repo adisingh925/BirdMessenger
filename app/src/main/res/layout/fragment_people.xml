@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#17202A"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Fragments.PeopleFragment">
 
@@ -11,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
         android:title="@string/app_name"
+        android:background="#17202A"
         android:titleTextColor="?attr/font_color"
         android:subtitle="People"
         android:subtitleTextColor="?attr/font_color"

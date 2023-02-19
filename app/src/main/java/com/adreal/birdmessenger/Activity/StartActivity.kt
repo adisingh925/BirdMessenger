@@ -2,8 +2,10 @@ package com.adreal.birdmessenger.Activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
 import com.adreal.birdmessenger.ViewModel.StartActivityViewModel
@@ -17,7 +19,7 @@ class StartActivity : AppCompatActivity() {
         ActivityStartBinding.inflate(layoutInflater)
     }
 
-    private val startActivityViewModel by lazy {
+    val startActivityViewModel by lazy {
         ViewModelProvider(this)[StartActivityViewModel::class.java]
     }
 
@@ -32,6 +34,8 @@ class StartActivity : AppCompatActivity() {
         startActivityViewModel.subscribeToCommonTopic()
         startActivityViewModel.subscribeToIndividualTopic()
         startActivityViewModel.uploadToken()
+        val key = Encryption().generateKeyPair()
+        Log.d("keys",key.private.toString() + " " + key.public)
     }
 
     override fun onResume() {

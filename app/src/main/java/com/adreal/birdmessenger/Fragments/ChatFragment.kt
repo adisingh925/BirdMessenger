@@ -1,6 +1,9 @@
 package com.adreal.birdmessenger.Fragments
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.adreal.birdmessenger.Activity.StartActivity
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
@@ -94,7 +98,22 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
             popup.toggle()
         }
 
+//        binding.edittext.addTextChangedListener(object : TextWatcher{
+//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+//                Log.d("text change","No change")
+//            }
+//
+//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+//                Log.d("text change","changing")
+//            }
+//
+//            override fun afterTextChanged(s: Editable?) {
+//                Log.d("text change","change complete")
+//            }
+//        })
+
         binding.edittext.addTextChangedListener {
+            chatViewModel.startTyping(binding.edittext.text.toString())
             if (binding.edittext.text.toString() != "") {
                 binding.camera.isVisible = false
                 binding.attachment.isVisible = false
@@ -126,10 +145,24 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         chatViewModel.liveData.observe(viewLifecycleOwner)
         {
-            if (it == "1") {
-                binding.toolbar.subtitle = "Online"
-            } else {
-                binding.toolbar.subtitle = ""
+            when (it) {
+                "1" -> {
+                    binding.toolbar.subtitle = "Online"
+                }
+                "2" -> {
+                    binding.toolbar.subtitle = "Typing..."
+                }
+                else -> {
+                    binding.toolbar.subtitle = ""
+                }
+            }
+        }
+
+        chatViewModel.mockLiveStatus.observe(viewLifecycleOwner){
+            if(it){
+                (activity as StartActivity).startActivityViewModel.setStatus(2)
+            }else{
+                (activity as StartActivity).startActivityViewModel.setStatus(1)
             }
         }
 
