@@ -1,33 +1,42 @@
 package com.adreal.birdmessenger.ViewModel
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adreal.birdmessenger.Constants.Constants
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.security.Key
+import java.util.*
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
 
 class StartActivityViewModel : ViewModel() {
 
     private val realtimeDatabase = Firebase.database
-    private val auth = Firebase.auth
     private val firestore = FirebaseFirestore.getInstance()
     private val messaging = FirebaseMessaging.getInstance()
     private val firebaseInstallations = FirebaseInstallations.getInstance()
 
     fun setStatus(status: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            if(SharedPreferences.read("installationId","") != ""){
-                realtimeDatabase.reference.child(SharedPreferences.read("installationId","").toString()).child("status")
+            if (SharedPreferences.read("installationId", "") != "") {
+                realtimeDatabase.reference.child(
+                    SharedPreferences.read("installationId", "").toString()
+                ).child("status")
                     .setValue(status)
-            }else{
+            } else {
                 firebaseInstallations.id.addOnSuccessListener {
                     realtimeDatabase.reference.child(it).child("status")
                         .setValue(status)
@@ -79,12 +88,55 @@ class StartActivityViewModel : ViewModel() {
             messaging.token.addOnSuccessListener {
                 val data = hashMapOf("token" to it)
                 firebaseInstallations.id.addOnSuccessListener { id ->
-                    firestore.collection(Constants.Users).document(id).set(data)
+                    firestore.collection(Constants.Users).document(id).set(data, SetOptions.merge())
                         .addOnSuccessListener {
                             Log.d("FCM token", "uploaded")
                             SharedPreferences.write("isTokenUploaded", "y")
                         }
                 }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun storeAESPublicKey() {
+        if (SharedPreferences.read("AESPublic", "") == "") {
+            val asymmetricKey = Encryption().getAsymmetricKeyPair()
+            SharedPreferences.write(
+                "AESPublic",
+                Base64.getEncoder().encodeToString(asymmetricKey.public.encoded)
+            )
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun storeDHKeyPair() {
+        if (SharedPreferences.read("DHKeyPair", "") == "") {
+            val DHKey = Encryption().generateDHKeyPair()
+            SharedPreferences.write("DHPublic", Base64.getEncoder().encodeToString(DHKey.public.encoded))
+
+//            SharedPreferences.write(
+//                "DHPrivate",
+//                Encryption().encrypt(
+//                    Base64.getEncoder().encodeToString(DHKey.public.encoded),
+//                    SharedPreferences.read("AESPublic", "").toString()
+//                )
+//            )
+
+            SharedPreferences.write("DHPrivate",Base64.getEncoder().encodeToString(DHKey.private.encoded))
+            SharedPreferences.write("DHKeyPair","y")
+            Log.d("DH Key Pair storing","success")
+            uploadDHPublicKey(Base64.getEncoder().encodeToString(DHKey.public.encoded))
+        }
+    }
+
+    private fun uploadDHPublicKey(DHPublic : String) {
+        if(SharedPreferences.read("isKeyUploaded","") == ""){
+            firebaseInstallations.id.addOnSuccessListener {
+                val data = hashMapOf("DHPublic" to DHPublic)
+                firestore.collection(Constants.Users).document(it).set(data, SetOptions.merge())
+                SharedPreferences.write("isKeyUploaded","y")
+                Log.d("DH Public Key","uploaded")
             }
         }
     }
