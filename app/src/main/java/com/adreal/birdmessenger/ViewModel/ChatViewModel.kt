@@ -89,6 +89,7 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
             jsonObject.put("messageStatus",0)
             jsonObject.put("mediaType",0)
             jsonObject.put("category","chat")
+            jsonObject.put("iv",data.iv)
 
             priority.put("priority","medium")
 

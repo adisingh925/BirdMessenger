@@ -1,5 +1,6 @@
 package com.adreal.birdmessenger.Fragments
 
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.adreal.birdmessenger.Activity.StartActivity
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Database.Database
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -59,6 +62,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     lateinit var senderId: String
     var fromNotification = false
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -155,17 +159,18 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         binding.fab.setOnClickListener {
             if (!binding.edittext.text.isNullOrBlank()) {
                 val time = System.currentTimeMillis()
-                val msg = binding.edittext.text.toString().trim()
+                val msg = Encryption().encryptUsingSymmetricKey(binding.edittext.text.toString().trim())
                 binding.edittext.text.clear()
                 binding.edittext.append("")
 
                 val chatData = ChatModel(
                     time,
                     SharedPreferences.read("installationId", ""),
+                    java.util.Base64.getEncoder().encodeToString(msg.iv),
                     time,
                     receiverId,
                     null,
-                    msg,
+                    java.util.Base64.getEncoder().encodeToString(msg.cipherText),
                     0,
                     0
                 )

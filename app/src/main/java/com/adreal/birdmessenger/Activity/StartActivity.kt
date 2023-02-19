@@ -41,7 +41,7 @@ class StartActivity : AppCompatActivity() {
             startActivityViewModel.subscribeToCommonTopic()
             startActivityViewModel.subscribeToIndividualTopic()
             startActivityViewModel.uploadToken()
-            startActivityViewModel.storeAESPublicKey()
+//            startActivityViewModel.storeAESPublicKey()
             startActivityViewModel.storeDHKeyPair()
         }
     }

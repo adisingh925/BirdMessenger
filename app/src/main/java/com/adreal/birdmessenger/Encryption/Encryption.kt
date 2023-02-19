@@ -6,23 +6,28 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.adreal.birdmessenger.Model.EncryptedData
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.bouncycastle.crypto.digests.SHA256Digest
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator
+import org.bouncycastle.crypto.params.HKDFParameters
 import java.security.*
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
-import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class Encryption {
     companion object {
         const val DH_ALGORITHM = "DH"
         const val PROVIDER = "AndroidKeyStore"
-        const val KEY_ALIAS = "BMKEY"
+        const val KEY_ALIAS = "messaging_key"
+        private const val AES_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
         private const val RSA_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA
         private const val BLOCK_MODE = KeyProperties.BLOCK_MODE_ECB
         private const val PADDING = KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
@@ -31,7 +36,7 @@ class Encryption {
 
     fun generateDHKeyPair(): KeyPair {
         val keyPairGenerator = KeyPairGenerator.getInstance(DH_ALGORITHM)
-        keyPairGenerator.initialize(512, SecureRandom())
+        keyPairGenerator.initialize(2048, SecureRandom())
         return keyPairGenerator.generateKeyPair()
     }
 
@@ -52,10 +57,7 @@ class Encryption {
     private fun createAsymmetricKeyPair(): KeyPair {
         val generator: KeyPairGenerator =
             KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
-        val builder = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
+        val builder = KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
             .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
             .setKeySize(4096)
@@ -68,27 +70,45 @@ class Encryption {
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateSecret(publicSecret: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            val pubKey = java.util.Base64.getDecoder().decode(publicSecret)
-            val keySpec = X509EncodedKeySpec(pubKey)
-            val keyFactory = KeyFactory.getInstance("DH")
-            val publicKey = keyFactory.generatePublic(keySpec)
 
-            val privateSecret = SharedPreferences.read("DHPrivate", "")
-            val priKey = java.util.Base64.getDecoder().decode(privateSecret)
-            val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
-            val keyFactoryPrivate = KeyFactory.getInstance("DH")
-            val privateKey = keyFactoryPrivate.generatePrivate(keySpecPrivate)
-
-            val clientKeyAgreement: KeyAgreement = KeyAgreement.getInstance("DH")
-            clientKeyAgreement.init(privateKey)
-            clientKeyAgreement.doPhase(publicKey, true)
-            val clientSharedSecret: ByteArray = clientKeyAgreement.generateSecret()
-
-            SharedPreferences.write(
-                "DHSecret",
-                java.util.Base64.getEncoder().encodeToString(clientSharedSecret)
-            )
+            val publicKey = getDHPublicKeyFromBase64String(publicSecret)
+            val privateKey = getDHPrivateKeyFromBase64String()
+            val sharedSecret = getDHSharedSecret(publicKey, privateKey)
+            val aesKey = getAESKeyFromSharedSecret(sharedSecret)
+            SharedPreferences.write("AESSymmetricKey",java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
         }
+    }
+
+    private fun getAESKeyFromSharedSecret(sharedSecret: ByteArray): SecretKeySpec {
+        val hashBasedKeyDerivation = HKDFBytesGenerator(SHA256Digest())
+        val derivedKey = ByteArray(32)
+        hashBasedKeyDerivation.init(HKDFParameters(sharedSecret,null,null))
+        hashBasedKeyDerivation.generateBytes(derivedKey, 0, 32)
+        return SecretKeySpec(derivedKey, AES_ALGORITHM)
+    }
+
+    private fun getDHSharedSecret(publicKey: PublicKey, privateKey: PrivateKey): ByteArray {
+        val clientKeyAgreement: KeyAgreement = KeyAgreement.getInstance(DH_ALGORITHM)
+        clientKeyAgreement.init(privateKey)
+        clientKeyAgreement.doPhase(publicKey, true)
+        return clientKeyAgreement.generateSecret()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getDHPrivateKeyFromBase64String() : PrivateKey{
+        val privateSecret = SharedPreferences.read("DHPrivate", "")
+        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
+        val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
+        val keyFactoryPrivate = KeyFactory.getInstance(DH_ALGORITHM)
+        return keyFactoryPrivate.generatePrivate(keySpecPrivate)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getDHPublicKeyFromBase64String(publicKeyBase64 : String) : PublicKey{
+        val publicKeyString = java.util.Base64.getDecoder().decode(publicKeyBase64)
+        val publicKeySpecification = X509EncodedKeySpec(publicKeyString)
+        val keyFactory = KeyFactory.getInstance(DH_ALGORITHM)
+        return keyFactory.generatePublic(publicKeySpecification)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -111,5 +131,28 @@ class Encryption {
         val encryptedData = Base64.decode(data, Base64.DEFAULT)
         val decodedData = cipher.doFinal(encryptedData)
         return String(decodedData)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun encryptUsingSymmetricKey(data : String) : EncryptedData{
+        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("AESSymmetricKey",""))
+        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
+        val iv = cipher.iv
+        val plaintext = data.toByteArray()
+        val ciphertext = cipher.doFinal(plaintext)
+        return EncryptedData(ciphertext,iv)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun decryptUsingSymmetricEncryption(cipherText : ByteArray, iv : ByteArray) : String{
+        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("AESSymmetricKey",""))
+        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        val ivParameterSpec = IvParameterSpec(iv)
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec)
+        val plaintext = cipher.doFinal(cipherText)
+        return plaintext.decodeToString()
     }
 }

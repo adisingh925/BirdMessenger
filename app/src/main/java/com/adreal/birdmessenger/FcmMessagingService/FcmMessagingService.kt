@@ -82,11 +82,13 @@ class FcmMessagingService : FirebaseMessagingService() {
                 val sendTime = remoteMessage.data["sendTime"].toString().toLong()
                 val receiverId = remoteMessage.data["receiverId"].toString()
                 val msg = remoteMessage.data["msg"].toString()
+                val iv = remoteMessage.data["iv"].toString()
                 val receivedTime = System.currentTimeMillis()
 
                 val chatData = ChatModel(
                     id,
                     senderId,
+                    iv,
                     sendTime,
                     receiverId,
                     receivedTime,

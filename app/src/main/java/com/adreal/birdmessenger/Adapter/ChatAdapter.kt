@@ -3,15 +3,16 @@ package com.adreal.birdmessenger.Adapter
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.bumptech.glide.Glide
@@ -54,9 +55,11 @@ class ChatAdapter(
         val senderTime: TextView = itemView.findViewById(R.id.senderTime)
         val layout = itemView.findViewById<ConstraintLayout>(R.id.constraintLayout)
 
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].sendTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(senderTextView, messageList[position].msg.toString())
+            markWon.setMarkdown(senderTextView, Encryption().decryptUsingSymmetricEncryption(Base64.getDecoder().decode(messageList[position].msg),
+                Base64.getDecoder().decode(messageList[position].iv)))
             senderTime.text = time
         }
     }
@@ -66,13 +69,15 @@ class ChatAdapter(
         val receiverTextView: TextView = itemView.findViewById(R.id.receiverMessage)
         val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
 
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(receiverTextView, messageList[position].msg.toString())
+            markWon.setMarkdown(receiverTextView, Encryption().decryptUsingSymmetricEncryption(Base64.getDecoder().decode(messageList[position].msg),Base64.getDecoder().decode(messageList[position].iv)))
             receiverTime.text = time
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         position: Int,
@@ -194,6 +199,7 @@ class ChatAdapter(
         return VIEW_TYPE_ONE
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (messageList[position].senderId == installationId) {
             when (messageList[position].mediaType) {
