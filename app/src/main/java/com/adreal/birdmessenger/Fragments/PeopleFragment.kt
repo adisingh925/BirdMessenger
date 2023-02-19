@@ -61,6 +61,7 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
     private lateinit var dialog: Dialog
     private lateinit var imageString: String
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -107,7 +108,6 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
         }
 
         binding.fab.setOnClickListener {
-//            findNavController().navigate(R.id.action_peopleFragment_to_addPeople)
             showCustomDialog("Enter The Key", "Connect")
         }
 
@@ -126,6 +126,7 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun checkForName() {
         if (SharedPreferences.read("name", "") == "") {
             showCustomDialog("Enter Your Name", "Set")

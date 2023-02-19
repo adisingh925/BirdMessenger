@@ -145,10 +145,8 @@ class Encryption {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun encryptUsingSymmetricKey(data : String, id : String) : EncryptedData{
-        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id",""))
-        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
+        cipher.init(Cipher.ENCRYPT_MODE, getStoredSymmetricEncryptionKey(id))
         val iv = cipher.iv
         val plaintext = data.toByteArray()
         val ciphertext = cipher.doFinal(plaintext)
@@ -161,22 +159,17 @@ class Encryption {
         iv: ByteArray,
         id: String
     ): String {
-        val secretKey = java.util.Base64.getDecoder()
-            .decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))
-        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         val ivParameterSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec)
+        cipher.init(Cipher.DECRYPT_MODE, getStoredSymmetricEncryptionKey(id), ivParameterSpec)
         return cipher.doFinal(cipherText).decodeToString()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateHMAC(message: String, id : String): String {
-        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))
-        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         try {
             val mac = Mac.getInstance(HMAC_ALGORITHM)
-            mac.init(secretKeySpec)
+            mac.init(getStoredSymmetricEncryptionKey(id))
             val HMAC = mac.doFinal(message.toByteArray())
             return HMAC.joinToString("") { String.format("%02x", it) }
         } catch (e: NoSuchAlgorithmException) {
@@ -190,5 +183,10 @@ class Encryption {
     @RequiresApi(Build.VERSION_CODES.O)
     fun compareMessageAndHMAC(msg : String, HMAC : String, id : String) : Boolean{
         return generateHMAC(msg,id) == HMAC
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getStoredSymmetricEncryptionKey(id : String) : SecretKeySpec{
+        return SecretKeySpec(java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM)
     }
 }
