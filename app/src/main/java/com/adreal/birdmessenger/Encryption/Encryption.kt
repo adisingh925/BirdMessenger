@@ -40,6 +40,10 @@ class Encryption {
         const val DH_PRIVATE = "DHPrivate"
     }
 
+    private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply {
+        load(null)
+    }
+
     fun generateDHKeyPair(): KeyPair {
         val keyPairGenerator = KeyPairGenerator.getInstance(DH_ALGORITHM)
         keyPairGenerator.initialize(DH_KEY_SIZE, SecureRandom())
