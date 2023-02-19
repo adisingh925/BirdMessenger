@@ -3,19 +3,19 @@ package com.adreal.birdmessenger.Adapter
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.TextView
-import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import io.noties.markwon.Markwon
 import io.noties.markwon.movement.MovementMethodPlugin
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +25,6 @@ import java.text.CharacterIterator
 import java.text.SimpleDateFormat
 import java.text.StringCharacterIterator
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 class ChatAdapter(
@@ -53,6 +52,7 @@ class ChatAdapter(
         var senderTextView: TextView = itemView.findViewById(R.id.senderMessage)
         val senderSeen: ImageView = itemView.findViewById(R.id.senderStatus)
         val senderTime: TextView = itemView.findViewById(R.id.senderTime)
+        val layout = itemView.findViewById<ConstraintLayout>(R.id.constraintLayout)
 
         fun bind(position: Int) {
             val time = getDate(messageList[position].sendTime.toString().toLong(), "hh:mm aa")

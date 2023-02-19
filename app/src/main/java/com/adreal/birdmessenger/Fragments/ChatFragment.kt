@@ -98,20 +98,6 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
             popup.toggle()
         }
 
-//        binding.edittext.addTextChangedListener(object : TextWatcher{
-//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-//                Log.d("text change","No change")
-//            }
-//
-//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-//                Log.d("text change","changing")
-//            }
-//
-//            override fun afterTextChanged(s: Editable?) {
-//                Log.d("text change","change complete")
-//            }
-//        })
-
         binding.edittext.addTextChangedListener {
             chatViewModel.startTyping(binding.edittext.text.toString())
             if (binding.edittext.text.toString() != "") {

@@ -155,7 +155,6 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
             isTyping = true
             typingHandler.postDelayed(typingThread, 3000)
         }
-
     }
 
     private val typingThread = Runnable {
