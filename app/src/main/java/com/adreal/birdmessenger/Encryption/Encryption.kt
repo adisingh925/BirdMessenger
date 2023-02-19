@@ -4,7 +4,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.adreal.birdmessenger.Model.EncryptedData
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -19,6 +18,7 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
+import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
@@ -27,6 +27,7 @@ class Encryption {
         const val DH_ALGORITHM = "DH"
         const val PROVIDER = "AndroidKeyStore"
         const val KEY_ALIAS = "messaging_key"
+        private const val HMAC_ALGORITHM = "HmacSHA256"
         private const val AES_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
         private const val RSA_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA
         private const val BLOCK_MODE_RSA = KeyProperties.BLOCK_MODE_ECB
@@ -151,17 +152,43 @@ class Encryption {
         val iv = cipher.iv
         val plaintext = data.toByteArray()
         val ciphertext = cipher.doFinal(plaintext)
-        return EncryptedData(ciphertext,iv)
+        return EncryptedData(ciphertext,iv,generateHMAC(data,id))
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun decryptUsingSymmetricEncryption(cipherText : ByteArray, iv : ByteArray, id : String) : String{
-        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id",""))
+    fun decryptUsingSymmetricEncryption(
+        cipherText: ByteArray,
+        iv: ByteArray,
+        id: String
+    ): String {
+        val secretKey = java.util.Base64.getDecoder()
+            .decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))
         val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         val ivParameterSpec = IvParameterSpec(iv)
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec)
-        val plaintext = cipher.doFinal(cipherText)
-        return plaintext.decodeToString()
+        return cipher.doFinal(cipherText).decodeToString()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateHMAC(message: String, id : String): String {
+        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))
+        val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
+        try {
+            val mac = Mac.getInstance(HMAC_ALGORITHM)
+            mac.init(secretKeySpec)
+            val HMAC = mac.doFinal(message.toByteArray())
+            return HMAC.joinToString("") { String.format("%02x", it) }
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: InvalidKeyException) {
+            e.printStackTrace()
+        }
+        return ""
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun compareMessageAndHMAC(msg : String, HMAC : String, id : String) : Boolean{
+        return generateHMAC(msg,id) == HMAC
     }
 }

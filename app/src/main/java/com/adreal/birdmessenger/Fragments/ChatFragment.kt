@@ -158,8 +158,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         binding.fab.setOnClickListener {
             if (!binding.edittext.text.isNullOrBlank()) {
+                val actualMsg = binding.edittext.text.toString().trim()
                 val time = System.currentTimeMillis()
-                val msg = Encryption().encryptUsingSymmetricKey(binding.edittext.text.toString().trim(), receiverId)
+                val hmac = Encryption().generateHMAC(actualMsg,receiverId)
+                val msg = Encryption().encryptUsingSymmetricKey(actualMsg, receiverId)
                 binding.edittext.text.clear()
                 binding.edittext.append("")
 
@@ -176,7 +178,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 )
 
                 chatViewModel.sendMsg(
-                    chatData, receiverToken
+                    chatData, receiverToken, hmac
                 )
 
                 chatViewModel.storeMsg(chatData)

@@ -44,7 +44,7 @@ class FcmMessagingService : FirebaseMessagingService() {
     private val firestore = Firebase.firestore
     var needsAgain = 1
 
-    private val notificationManager by lazy{
+    private val notificationManager by lazy {
         getSystemService(
             NotificationManager::class.java
         )
@@ -83,6 +83,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                 val receiverId = remoteMessage.data["receiverId"].toString()
                 val msg = remoteMessage.data["msg"].toString()
                 val iv = remoteMessage.data["iv"].toString()
+                val hmac = remoteMessage.data["HMAC"].toString()
                 val receivedTime = System.currentTimeMillis()
 
                 val chatData = ChatModel(
@@ -98,29 +99,41 @@ class FcmMessagingService : FirebaseMessagingService() {
                 )
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    Database.getDatabase(applicationContext).Dao().addChatData(chatData)
-                    senderToken = Database.getDatabase(applicationContext).Dao().getToken(senderId)
-                    senderName = Database.getDatabase(applicationContext).Dao().getUserName(senderId)
-                    prepareChatNotification(senderId, "", senderName, senderToken)
+                    if (Encryption().compareMessageAndHMAC(
+                            Encryption().decryptUsingSymmetricEncryption(
+                                java.util.Base64.getDecoder().decode(msg),
+                                java.util.Base64.getDecoder().decode(iv),
+                                senderId
+                            ), hmac, senderId
+                        )
+                    ) {
+                        Log.d("valid message","verified")
+                        Database.getDatabase(applicationContext).Dao().addChatData(chatData)
+                        senderToken =
+                            Database.getDatabase(applicationContext).Dao().getToken(senderId)
+                        senderName =
+                            Database.getDatabase(applicationContext).Dao().getUserName(senderId)
+                        prepareChatNotification(senderId, "", senderName, senderToken)
 
-                    val state = SharedPreferences.read(senderId, "n")
+                        val state = SharedPreferences.read(senderId, "n")
 
-                    val jsonObject = JSONObject()
-                    val dataJson = JSONObject()
-                    jsonObject.put("id", id)
-                    dataJson.put("data", jsonObject)
-                        .put("to", senderToken)
+                        val jsonObject = JSONObject()
+                        val dataJson = JSONObject()
+                        jsonObject.put("id", id)
+                        dataJson.put("data", jsonObject)
+                            .put("to", senderToken)
 
-                    if (state == "y") {
-                        updateLastMessage(msg, senderId, receivedTime)
-                        jsonObject.put("messageStatus", 3)
-                        jsonObject.put("category", "seen")
-                        sendData(dataJson.toString(), chatData, 3)
-                    } else {
-                        incrementUnreadMessages(senderId, msg, receivedTime)
-                        jsonObject.put("messageStatus", 2)
-                        jsonObject.put("category", "delivered")
-                        sendData(dataJson.toString(), chatData, 2)
+                        if (state == "y") {
+                            updateLastMessage(msg, senderId, receivedTime)
+                            jsonObject.put("messageStatus", 3)
+                            jsonObject.put("category", "seen")
+                            sendData(dataJson.toString(), chatData, 3)
+                        } else {
+                            incrementUnreadMessages(senderId, msg, receivedTime)
+                            jsonObject.put("messageStatus", 2)
+                            jsonObject.put("category", "delivered")
+                            sendData(dataJson.toString(), chatData, 2)
+                        }
                     }
                 }
             }
@@ -159,15 +172,17 @@ class FcmMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
     }
 
-    private fun updateLastMessage(msg: String, senderId: String, receivedTime : Long) {
+    private fun updateLastMessage(msg: String, senderId: String, receivedTime: Long) {
         CoroutineScope(Dispatchers.IO).launch {
-            Database.getDatabase(applicationContext).Dao().updateLastMessage(msg, receivedTime, senderId)
+            Database.getDatabase(applicationContext).Dao()
+                .updateLastMessage(msg, receivedTime, senderId)
         }
     }
 
-    private fun incrementUnreadMessages(senderId : String, msg : String, time : Long){
+    private fun incrementUnreadMessages(senderId: String, msg: String, time: Long) {
         CoroutineScope(Dispatchers.IO).launch {
-            Database.getDatabase(applicationContext).Dao().incrementUnreadMessages(senderId, msg, time)
+            Database.getDatabase(applicationContext).Dao()
+                .incrementUnreadMessages(senderId, msg, time)
         }
     }
 
@@ -209,9 +224,12 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        val data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId).asReversed()
+        val data =
+            Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
+                .asReversed()
 
-        val imageString = Database.getDatabase(applicationContext).Dao().readImageStringForUser(senderId)
+        val imageString =
+            Database.getDatabase(applicationContext).Dao().readImageStringForUser(senderId)
         val imageBytes = Base64.decode(imageString, 0)
         val imageBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
@@ -287,7 +305,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         senderName: String,
         senderToken: String
     ) {
-        if(needsAgain == 1){
+        if (needsAgain == 1) {
             val cancelIntent = Intent(this, Receiver::class.java)
             cancelIntent.putExtra("notificationId", notificationId)
 

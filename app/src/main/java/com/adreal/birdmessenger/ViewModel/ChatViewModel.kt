@@ -75,7 +75,7 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
         }
     }
 
-    fun sendMsg(data : ChatModel, receiverToken : String){
+    fun sendMsg(data : ChatModel, receiverToken : String, hmac : String){
         viewModelScope.launch(Dispatchers.IO) {
             val jsonObject = JSONObject()
             val dataJson = JSONObject()
@@ -90,6 +90,7 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
             jsonObject.put("mediaType",0)
             jsonObject.put("category","chat")
             jsonObject.put("iv",data.iv)
+            jsonObject.put("HMAC",hmac)
 
             priority.put("priority","medium")
 
