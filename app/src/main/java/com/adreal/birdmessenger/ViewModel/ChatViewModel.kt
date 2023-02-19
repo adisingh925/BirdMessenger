@@ -27,12 +27,12 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ChatViewModel(application : Application) : AndroidViewModel(application) {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val realtimeDatabase = Firebase.database
     val liveData = MutableLiveData<String>()
 
-    fun getStatus(receiverId : String) {
+    fun getStatus(receiverId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             realtimeDatabase.reference.child(receiverId).addChildEventListener(object :
                 ChildEventListener {
@@ -62,41 +62,42 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
         }
     }
 
-    fun storeMsg(data : ChatModel){
+    fun storeMsg(data: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().addChatData(data)
-            Database.getDatabase(getApplication()).Dao().updateLastMessage(data.msg.toString(), data.sendTime!!, data.receiverId.toString())
+            Database.getDatabase(getApplication()).Dao()
+                .updateLastMessage(data.msg.toString(), data.sendTime!!, data.receiverId.toString())
         }
     }
 
-    fun updateMsg(data : ChatModel){
+    fun updateMsg(data: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().updateChatData(data)
         }
     }
 
-    fun sendMsg(data : ChatModel, receiverToken : String, hmac : String){
+    fun sendMsg(data: ChatModel, receiverToken: String, hmac: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val jsonObject = JSONObject()
             val dataJson = JSONObject()
             val priority = JSONObject()
 
-            jsonObject.put("id",data.messageId)
-            jsonObject.put("senderId",data.senderId)
-            jsonObject.put("sendTime",data.sendTime)
-            jsonObject.put("receiverId",data.receiverId)
-            jsonObject.put("msg",data.msg)
-            jsonObject.put("messageStatus",0)
-            jsonObject.put("mediaType",0)
-            jsonObject.put("category","chat")
-            jsonObject.put("iv",data.iv)
-            jsonObject.put("HMAC",hmac)
+            jsonObject.put("id", data.messageId)
+            jsonObject.put("senderId", data.senderId)
+            jsonObject.put("sendTime", data.sendTime)
+            jsonObject.put("receiverId", data.receiverId)
+            jsonObject.put("msg", data.msg)
+            jsonObject.put("messageStatus", 0)
+            jsonObject.put("mediaType", 0)
+            jsonObject.put("category", "chat")
+            jsonObject.put("iv", data.iv)
+            jsonObject.put("HMAC", hmac)
 
-            priority.put("priority","medium")
+            priority.put("priority", "medium")
 
-            dataJson.put("data",jsonObject)
-            dataJson.put("android",priority)
-            dataJson.put("to",receiverToken)
+            dataJson.put("data", jsonObject)
+            dataJson.put("android", priority)
+            dataJson.put("to", receiverToken)
 
             send(dataJson.toString(), data)
         }
@@ -105,18 +106,18 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
     fun send(dataJson: String, data: ChatModel) {
         val json = "application/json; charset=utf-8".toMediaTypeOrNull()
         val body = dataJson.toRequestBody(json)
-        val chat = SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}",body)
+        val chat = SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}", body)
 
         chat.enqueue(object : Callback<ChatResponse> {
             override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
-                Log.d("response",response.toString())
+                Log.d("response", response.toString())
                 val details = response.body()
-                if(details != null){
-                    Log.d("details",details.toString())
-                    if(data.messageStatus == 0){
+                if (details != null) {
+                    Log.d("details", details.toString())
+                    if (data.messageStatus == 0) {
                         data.messageStatus = 1
                         updateMsg(data)
-                    }else{
+                    } else {
                         data.messageStatus = 3
                         updateMsg(data)
                     }
@@ -124,12 +125,12 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
             }
 
             override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
-                Log.d("msg sending failed",t.message.toString())
+                Log.d("msg sending failed", t.message.toString())
             }
         })
     }
 
-    fun updateUnseenMessageCount(id : String) {
+    fun updateUnseenMessageCount(id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().resetUnseenMessageCount(id)
         }
@@ -145,22 +146,22 @@ class ChatViewModel(application : Application) : AndroidViewModel(application) {
 
     /*
     called on onTextChange */
-    fun startTyping(msg: String){
+    fun startTyping(msg: String) {
         if (msg.isEmpty()) {
-            if (isTyping){
+            if (isTyping) {
                 removeTypingCallbacks()
-                _mockStatus.value=false
+                _mockStatus.value = false
             }
             isTyping = false
         } else if (!isTyping) {
-            _mockStatus.value= true
+            _mockStatus.value = true
             isTyping = true
             typingHandler.postDelayed(typingThread, 3000)
         }
     }
 
     private val typingThread = Runnable {
-        _mockStatus.value= false
+        _mockStatus.value = false
         isTyping = false
     }
 

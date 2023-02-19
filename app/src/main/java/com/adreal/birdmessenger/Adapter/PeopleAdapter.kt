@@ -26,7 +26,7 @@ class PeopleAdapter(
 
     private lateinit var binding: PeopleLayoutBinding
 
-    private var peopleList : MutableList<UserModel> = ArrayList()
+    private var peopleList: MutableList<UserModel> = ArrayList()
 
     private val markWon by lazy {
         context.let { Markwon.builder(context).usePlugin(MovementMethodPlugin.none()).build() }
@@ -70,19 +70,20 @@ class PeopleAdapter(
 
         holder.text.text = peopleList[position].userName
 
-        if(peopleList[position].lastMessage == ""){
+        if (peopleList[position].lastMessage == "") {
             holder.lastMessage.isVisible = false
-        }else{
+        } else {
             holder.lastMessage.isVisible = true
             markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
         }
 
         holder.unseenMessages.text = peopleList[position].unreadMessages.toString()
 
-        if(peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()){
+        if (peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()) {
             holder.timeStamp.text = ""
-        }else{
-            holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+        } else {
+            holder.timeStamp.text =
+                getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
         }
 
         if (peopleList[position].unreadMessages == 0) {
@@ -103,23 +104,26 @@ class PeopleAdapter(
     }
 
     override fun onBindViewHolder(holder: myViewHolder, position: Int, payloads: MutableList<Any>) {
-        if(payloads.isEmpty()){
+        if (payloads.isEmpty()) {
             super.onBindViewHolder(holder, position, payloads)
-        }else{
+        } else {
             Log.d("payload", payloads.toString())
             holder.text.text = peopleList[position].userName
 
-            if(peopleList[position].lastMessage == ""){
+            if (peopleList[position].lastMessage == "") {
                 holder.lastMessage.isVisible = false
-            }else{
+            } else {
                 holder.lastMessage.isVisible = true
                 markWon.setMarkdown(holder.lastMessage, peopleList[position].lastMessage.toString())
             }
 
-            if(peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()){
+            if (peopleList[position].lastMessageTimeStamp.toString().toLong() == "0".toLong()) {
                 holder.timeStamp.text = ""
-            }else{
-                holder.timeStamp.text = getDate(peopleList[position].lastMessageTimeStamp.toString().toLong(), "hh:mm aa")
+            } else {
+                holder.timeStamp.text = getDate(
+                    peopleList[position].lastMessageTimeStamp.toString().toLong(),
+                    "hh:mm aa"
+                )
             }
 
             if (peopleList[position].unreadMessages == 0) {
@@ -135,11 +139,11 @@ class PeopleAdapter(
     }
 
     fun setData(data: List<UserModel>) {
-        if(peopleList.isEmpty()){
+        if (peopleList.isEmpty()) {
             Log.d("list", "initialized")
             peopleList.addAll(data)
-            notifyItemRangeChanged(0,data.size)
-        }else{
+            notifyItemRangeChanged(0, data.size)
+        } else {
             if (data.size == peopleList.size) {
                 if (data[0].Id != peopleList[0].Id) {
                     val iterator = peopleList.iterator()
@@ -157,18 +161,18 @@ class PeopleAdapter(
                         }
                     }
                 }
-            }else if(data.size > peopleList.size){
-                if(data[0].Id != peopleList[0].Id){
-                    peopleList.add(0,data[0])
+            } else if (data.size > peopleList.size) {
+                if (data[0].Id != peopleList[0].Id) {
+                    peopleList.add(0, data[0])
                     notifyItemInserted(0)
                 }
             }
 
             val iterator = peopleList.iterator()
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 val index = peopleList.indexOf(iterator.next())
                 peopleList[index] = data[index]
-                notifyItemChanged(index,"hello")
+                notifyItemChanged(index, "hello")
             }
         }
     }
