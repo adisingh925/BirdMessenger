@@ -74,13 +74,13 @@ class Encryption {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateSecret(publicSecret: String) {
+    fun generateSecret(publicSecret: String, senderId : String) {
         CoroutineScope(Dispatchers.IO).launch {
             val publicKey = getDHPublicKeyFromBase64String(publicSecret)
             val privateKey = getDHPrivateKeyFromBase64String()
             val sharedSecret = getDHSharedSecret(publicKey, privateKey)
             val aesKey = getAESKeyFromSharedSecret(sharedSecret)
-            SharedPreferences.write(AES_SYMMETRIC_KEY,java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
+            SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId",java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
         }
     }
 
@@ -139,8 +139,8 @@ class Encryption {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun encryptUsingSymmetricKey(data : String) : EncryptedData{
-        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read(AES_SYMMETRIC_KEY,""))
+    fun encryptUsingSymmetricKey(data : String, id : String) : EncryptedData{
+        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id",""))
         val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
@@ -151,8 +151,8 @@ class Encryption {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun decryptUsingSymmetricEncryption(cipherText : ByteArray, iv : ByteArray) : String{
-        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read(AES_SYMMETRIC_KEY,""))
+    fun decryptUsingSymmetricEncryption(cipherText : ByteArray, iv : ByteArray, id : String) : String{
+        val secretKey = java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id",""))
         val secretKeySpec = SecretKeySpec(secretKey, AES_ALGORITHM)
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         val ivParameterSpec = IvParameterSpec(iv)

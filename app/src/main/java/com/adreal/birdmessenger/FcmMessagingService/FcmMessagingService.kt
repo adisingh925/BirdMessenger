@@ -190,7 +190,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                 time
             )
 
-            Encryption().generateSecret(it.get("DHPublic").toString())
+            Encryption().generateSecret(it.get("DHPublic").toString(), messageId)
 
             addNewUser(data)
         }

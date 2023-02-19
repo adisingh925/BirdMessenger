@@ -159,7 +159,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         binding.fab.setOnClickListener {
             if (!binding.edittext.text.isNullOrBlank()) {
                 val time = System.currentTimeMillis()
-                val msg = Encryption().encryptUsingSymmetricKey(binding.edittext.text.toString().trim())
+                val msg = Encryption().encryptUsingSymmetricKey(binding.edittext.text.toString().trim(), receiverId)
                 binding.edittext.text.clear()
                 binding.edittext.append("")
 

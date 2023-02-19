@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
@@ -15,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -132,6 +134,7 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun showCustomDialog(hint: String, buttonText: String) {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val bind = AddUserDialogBinding.inflate(layoutInflater)

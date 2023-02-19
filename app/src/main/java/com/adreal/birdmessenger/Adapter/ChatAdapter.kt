@@ -33,7 +33,7 @@ class ChatAdapter(
     private val onItemSeenListener: OnItemSeenListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var messageList : MutableList<ChatModel> = ArrayList()
+    private var messageList: MutableList<ChatModel> = ArrayList()
     lateinit var installationId: String
 
     private val markWon by lazy {
@@ -58,8 +58,13 @@ class ChatAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].sendTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(senderTextView, Encryption().decryptUsingSymmetricEncryption(Base64.getDecoder().decode(messageList[position].msg),
-                Base64.getDecoder().decode(messageList[position].iv)))
+            markWon.setMarkdown(
+                senderTextView, Encryption().decryptUsingSymmetricEncryption(
+                    Base64.getDecoder().decode(messageList[position].msg),
+                    Base64.getDecoder().decode(messageList[position].iv),
+                    messageList[position].receiverId.toString()
+                )
+            )
             senderTime.text = time
         }
     }
@@ -72,7 +77,14 @@ class ChatAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(receiverTextView, Encryption().decryptUsingSymmetricEncryption(Base64.getDecoder().decode(messageList[position].msg),Base64.getDecoder().decode(messageList[position].iv)))
+            markWon.setMarkdown(
+                receiverTextView,
+                Encryption().decryptUsingSymmetricEncryption(
+                    Base64.getDecoder().decode(messageList[position].msg),
+                    Base64.getDecoder().decode(messageList[position].iv),
+                    messageList[position].senderId.toString()
+                )
+            )
             receiverTime.text = time
         }
     }
@@ -83,9 +95,9 @@ class ChatAdapter(
         position: Int,
         payloads: MutableList<Any>
     ) {
-        if(payloads.isEmpty()){
+        if (payloads.isEmpty()) {
             super.onBindViewHolder(holder, position, payloads)
-        }else{
+        } else {
             if (messageList[position].senderId == installationId) {
                 when (messageList[position].mediaType) {
                     0 -> {
@@ -98,9 +110,10 @@ class ChatAdapter(
                                     .into(holder.senderSeen)
                             }
                             0 -> {
-                                Glide.with(context).load(R.drawable.sending).circleCrop().transition(
-                                    DrawableTransitionOptions.withCrossFade()
-                                )
+                                Glide.with(context).load(R.drawable.sending).circleCrop()
+                                    .transition(
+                                        DrawableTransitionOptions.withCrossFade()
+                                    )
                                     .into(holder.senderSeen)
                             }
                             1 -> {
@@ -110,9 +123,10 @@ class ChatAdapter(
                                     .into(holder.senderSeen)
                             }
                             2 -> {
-                                Glide.with(context).load(R.drawable.delivered).circleCrop().transition(
-                                    DrawableTransitionOptions.withCrossFade()
-                                )
+                                Glide.with(context).load(R.drawable.delivered).circleCrop()
+                                    .transition(
+                                        DrawableTransitionOptions.withCrossFade()
+                                    )
                                     .into(holder.senderSeen)
                             }
                         }
@@ -137,23 +151,23 @@ class ChatAdapter(
             installationId = id
         }
 
-        if(messageList.isEmpty()){
+        if (messageList.isEmpty()) {
             messageList.addAll(data)
-            notifyItemRangeChanged(0,data.size)
-        }else{
-            if(data.isNotEmpty()){
-                if(messageList.size != data.size){
+            notifyItemRangeChanged(0, data.size)
+        } else {
+            if (data.isNotEmpty()) {
+                if (messageList.size != data.size) {
                     messageList.add(data.last())
                     notifyItemInserted(messageList.size - 1)
                 }
 
-                for(i in messageList.lastIndex downTo 0){
-                    if(messageList[i] != data[i]){
+                for (i in messageList.lastIndex downTo 0) {
+                    if (messageList[i] != data[i]) {
                         messageList[i] = data[i]
-                        notifyItemChanged(i,"hello")
+                        notifyItemChanged(i, "hello")
                     }
                 }
-            }else{
+            } else {
                 notifyItemRangeRemoved(0, messageList.size)
                 messageList.clear()
             }
