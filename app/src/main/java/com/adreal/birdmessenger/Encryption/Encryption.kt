@@ -4,10 +4,17 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.annotation.RequiresApi
+import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.security.*
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
+import javax.crypto.KeyAgreement
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
 
@@ -56,6 +63,32 @@ class Encryption {
         generator.initialize(builder.build())
 
         return generator.generateKeyPair()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateSecret(publicSecret: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val pubKey = java.util.Base64.getDecoder().decode(publicSecret)
+            val keySpec = X509EncodedKeySpec(pubKey)
+            val keyFactory = KeyFactory.getInstance("DH")
+            val publicKey = keyFactory.generatePublic(keySpec)
+
+            val privateSecret = SharedPreferences.read("DHPrivate", "")
+            val priKey = java.util.Base64.getDecoder().decode(privateSecret)
+            val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
+            val keyFactoryPrivate = KeyFactory.getInstance("DH")
+            val privateKey = keyFactoryPrivate.generatePrivate(keySpecPrivate)
+
+            val clientKeyAgreement: KeyAgreement = KeyAgreement.getInstance("DH")
+            clientKeyAgreement.init(privateKey)
+            clientKeyAgreement.doPhase(publicKey, true)
+            val clientSharedSecret: ByteArray = clientKeyAgreement.generateSecret()
+
+            SharedPreferences.write(
+                "DHSecret",
+                java.util.Base64.getEncoder().encodeToString(clientSharedSecret)
+            )
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

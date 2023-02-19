@@ -15,6 +15,7 @@ import com.adreal.birdmessenger.BroadcastReceiver.Receiver
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Constants.Constants.Users
 import com.adreal.birdmessenger.Database.Database
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Model.UserModel
@@ -186,6 +187,8 @@ class FcmMessagingService : FirebaseMessagingService() {
                 0,
                 time
             )
+
+            Encryption().generateSecret(it.get("DHPublic").toString())
 
             addNewUser(data)
         }

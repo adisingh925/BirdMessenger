@@ -18,6 +18,9 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.security.Key
+import java.security.KeyFactory
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
@@ -114,15 +117,6 @@ class StartActivityViewModel : ViewModel() {
         if (SharedPreferences.read("DHKeyPair", "") == "") {
             val DHKey = Encryption().generateDHKeyPair()
             SharedPreferences.write("DHPublic", Base64.getEncoder().encodeToString(DHKey.public.encoded))
-
-//            SharedPreferences.write(
-//                "DHPrivate",
-//                Encryption().encrypt(
-//                    Base64.getEncoder().encodeToString(DHKey.public.encoded),
-//                    SharedPreferences.read("AESPublic", "").toString()
-//                )
-//            )
-
             SharedPreferences.write("DHPrivate",Base64.getEncoder().encodeToString(DHKey.private.encoded))
             SharedPreferences.write("DHKeyPair","y")
             Log.d("DH Key Pair storing","success")

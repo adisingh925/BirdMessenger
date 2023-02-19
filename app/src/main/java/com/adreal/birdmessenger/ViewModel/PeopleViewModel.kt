@@ -3,12 +3,15 @@ package com.adreal.birdmessenger.ViewModel
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Database.Database
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Model.UserModel
 import com.adreal.birdmessenger.Retrofit.SendChatObject
@@ -88,6 +91,7 @@ class PeopleViewModel : ViewModel() {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun addUser(id: String, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(Constants.Users).document(id).get().addOnSuccessListener {
@@ -95,6 +99,7 @@ class PeopleViewModel : ViewModel() {
                 val senderId = SharedPreferences.read("installationId", "")
                 val receiverName = it.get("name").toString()
                 val receiverImage = it.get("image").toString()
+                Encryption().generateSecret(it.get("DHPublic").toString())
                 val time = System.currentTimeMillis()
 
                 val jsonObject = JSONObject()
