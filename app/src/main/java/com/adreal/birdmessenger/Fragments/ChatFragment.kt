@@ -104,15 +104,15 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         binding.edittext.addTextChangedListener {
             chatViewModel.startTyping(binding.edittext.text.toString())
-            if (binding.edittext.text.toString() != "") {
-                binding.camera.isVisible = false
-                binding.attachment.isVisible = false
-                binding.fab.setImageResource(R.drawable.send)
-            } else {
-                binding.camera.isVisible = true
-                binding.attachment.isVisible = true
-                binding.fab.setImageResource(R.drawable.mic)
-            }
+//            if (binding.edittext.text.toString() != "") {
+//                binding.camera.isVisible = false
+//                binding.attachment.isVisible = false
+//                binding.fab.setImageResource(R.drawable.send)
+//            } else {
+//                binding.camera.isVisible = true
+//                binding.attachment.isVisible = true
+//                binding.fab.setImageResource(R.drawable.mic)
+//            }
         }
 
         offlineViewModel.readAllMessages(senderId, receiverId).observe(viewLifecycleOwner)
