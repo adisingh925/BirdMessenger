@@ -124,7 +124,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("response", response.toString())
                 val details = response.body()
                 if (details != null) {
-                    Log.d("details", details.toString())
                     if (data.messageStatus == 0) {
                         data.messageStatus = 1
                         updateMsg(data)

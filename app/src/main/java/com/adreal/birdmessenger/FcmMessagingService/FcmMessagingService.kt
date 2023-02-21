@@ -87,17 +87,19 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                     if (!encryptedData.isNullOrBlank() && !hash.isNullOrBlank() && !senderId.isNullOrBlank() && !initializationVector.isNullOrBlank()) {
                         CoroutineScope(Dispatchers.IO).launch {
-                        if (Encryption().compareMessageAndHMAC(encryptedData, hash, senderId)) {
-                            val receivedTime = System.currentTimeMillis()
-                            val decryptedData = Encryption().decryptUsingSymmetricEncryption(
-                                java.util.Base64.getDecoder().decode(encryptedData),
-                                java.util.Base64.getDecoder().decode(initializationVector),
-                                senderId
-                            )
+                            if (Encryption().compareMessageAndHMAC(encryptedData, hash, senderId)) {
 
-                            val data = Gson().fromJson(decryptedData, encryptedModel::class.java)
+                                val receivedTime = System.currentTimeMillis()
 
-                            val chatData = ChatModel(
+                                val decryptedData = Encryption().decryptUsingSymmetricEncryption(
+                                    java.util.Base64.getDecoder().decode(encryptedData),
+                                    java.util.Base64.getDecoder().decode(initializationVector),
+                                    senderId
+                                )
+
+                                val data = Gson().fromJson(decryptedData, encryptedModel::class.java)
+
+                                val chatData = ChatModel(
                                     data.id.toLong(),
                                     senderId,
                                     data.id.toLong(),
@@ -108,36 +110,35 @@ class FcmMessagingService : FirebaseMessagingService() {
                                     0
                                 )
 
-                                val senderData = Database.getDatabase(applicationContext).Dao().getTokenAndUserName(senderId)
+                                val senderData = Database.getDatabase(applicationContext).Dao()
+                                    .getTokenAndUserName(senderId)
 
-                                if (senderData.userToken.isNotBlank() && senderData.userName.isNotBlank()) {
-                                    Database.getDatabase(applicationContext).Dao().addChatData(chatData)
+                                Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                    prepareChatNotification(
-                                        senderId,
-                                        senderData.userName,
-                                        senderData.userToken
-                                    )
+                                prepareChatNotification(
+                                    senderId,
+                                    senderData.userName,
+                                    senderData.userToken
+                                )
 
-                                    val state = SharedPreferences.read(senderId, "n")
+                                val state = SharedPreferences.read(senderId, "n")
 
-                                    val jsonObject = JSONObject()
-                                    val dataJson = JSONObject()
+                                val jsonObject = JSONObject()
+                                val dataJson = JSONObject()
 
-                                    jsonObject.put("id", chatData.messageId)
-                                    dataJson.put("data", jsonObject).put("to", senderData.userToken)
+                                jsonObject.put("id", chatData.messageId)
+                                dataJson.put("data", jsonObject).put("to", senderData.userToken)
 
-                                    if (state == "y") {
-                                        updateLastMessage(chatData.msg, senderId, receivedTime)
-                                        jsonObject.put("messageStatus", 3)
-                                        jsonObject.put("category", "seen")
-                                        sendData(dataJson.toString(), chatData, 3)
-                                    } else {
-                                        incrementUnreadMessages(senderId, chatData.msg, receivedTime)
-                                        jsonObject.put("messageStatus", 2)
-                                        jsonObject.put("category", "delivered")
-                                        sendData(dataJson.toString(), chatData, 2)
-                                    }
+                                if (state == "y") {
+                                    updateLastMessage(chatData.msg, senderId, receivedTime)
+                                    jsonObject.put("messageStatus", 3)
+                                    jsonObject.put("category", "seen")
+                                    sendData(dataJson.toString(), chatData, 3)
+                                } else {
+                                    incrementUnreadMessages(senderId, chatData.msg, receivedTime)
+                                    jsonObject.put("messageStatus", 2)
+                                    jsonObject.put("category", "delivered")
+                                    sendData(dataJson.toString(), chatData, 2)
                                 }
                             }
                         }
@@ -230,7 +231,9 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        val data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId).asReversed()
+        val data =
+            Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
+                .asReversed()
 
         val imageString =
             Database.getDatabase(applicationContext).Dao().readImageStringForUser(senderId)
