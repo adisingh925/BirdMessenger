@@ -134,4 +134,27 @@ class StartActivityViewModel : ViewModel() {
             }
         }
     }
+
+    private fun uploadECDHPublicKey(DHPublic : String) {
+        if(SharedPreferences.read("isKeyUploaded","") == ""){
+            firebaseInstallations.id.addOnSuccessListener {
+                val data = hashMapOf("ECDHPublic" to DHPublic)
+                firestore.collection(Constants.Users).document(it).set(data, SetOptions.merge())
+                SharedPreferences.write("isKeyUploaded","y")
+                Log.d("ECDH Public Key","uploaded")
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun storeECDHKeyPair() {
+        if (SharedPreferences.read("ECDHKeyPair", "") == "") {
+            val ECDHKey = Encryption().generateECDHKeyPair()
+            SharedPreferences.write("ECDHPublic", Base64.getEncoder().encodeToString(ECDHKey.public.encoded))
+            SharedPreferences.write("ECDHPrivate",Base64.getEncoder().encodeToString(ECDHKey.private.encoded))
+            SharedPreferences.write("ECDHKeyPair","y")
+            Log.d("ECDH Key Pair storing","success")
+            uploadECDHPublicKey(Base64.getEncoder().encodeToString(ECDHKey.public.encoded))
+        }
+    }
 }

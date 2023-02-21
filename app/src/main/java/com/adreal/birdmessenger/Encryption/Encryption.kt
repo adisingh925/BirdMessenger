@@ -4,7 +4,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.adreal.birdmessenger.Model.EncryptedData
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -14,6 +13,15 @@ import kotlinx.coroutines.launch
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.interfaces.ECPrivateKey
+import org.bouncycastle.jce.interfaces.ECPublicKey
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+import org.bouncycastle.jce.spec.ECParameterSpec
+import org.bouncycastle.jce.spec.ECPrivateKeySpec
+import org.bouncycastle.jce.spec.ECPublicKeySpec
+import java.math.BigInteger
 import java.security.*
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
@@ -40,10 +48,18 @@ class Encryption {
         private const val AES_SYMMETRIC_KEY = "AESSymmetricKey"
         private const val DH_KEY_SIZE = 2048
         const val DH_PRIVATE = "DHPrivate"
+        const val EC_PRIVATE = "ECDHPrivate"
+        const val ELLIPTIC_CURVE_ALGORITHM = "ECDH"
+        const val CURVE_NAME = "secp256r1"
     }
 
     private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply {
         load(null)
+    }
+
+    fun addBouncyCastleProvider(){
+        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
+        Security.addProvider(BouncyCastleProvider())
     }
 
     fun generateDHKeyPair(): KeyPair {
@@ -67,8 +83,7 @@ class Encryption {
     }
 
     private fun createAsymmetricKeyPair(): KeyPair {
-        val generator: KeyPairGenerator =
-            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
+        val generator: KeyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
         val builder = KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
             .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
@@ -79,8 +94,50 @@ class Encryption {
         return generator.generateKeyPair()
     }
 
+    fun generateECDHKeyPair() : KeyPair{
+        val ecSpec = ECNamedCurveTable.getParameterSpec(CURVE_NAME)
+        val keyGen = KeyPairGenerator.getInstance(ELLIPTIC_CURVE_ALGORITHM, BouncyCastleProvider())
+        keyGen.initialize(ecSpec, SecureRandom())
+        return keyGen.generateKeyPair()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateSecret(publicSecret: String, senderId : String) {
+    fun generateECDHSecret(publicSecret: String, senderId: String){
+        val publicKey = getECDHPublicKeyFromBase64String(publicSecret)
+        val privateKey = getECDHPrivateKeyFromBase64String()
+        val sharedSecret = getECDHSharedSecret(publicKey, privateKey)
+        val aesKey = getAESKeyFromSharedSecret(sharedSecret)
+        SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId",java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
+    }
+
+    private fun getECDHSharedSecret(publicKey: ECPublicKey, privateKey: ECPrivateKey): ByteArray {
+        val keyAgreement = KeyAgreement.getInstance(ELLIPTIC_CURVE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME)
+        keyAgreement.init(privateKey)
+        val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+        val ecPublicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKey.encoded)) as ECPublicKey
+        keyAgreement.doPhase(ecPublicKey, true)
+        return keyAgreement.generateSecret()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getECDHPrivateKeyFromBase64String(): ECPrivateKey {
+        val privateSecret = SharedPreferences.read(EC_PRIVATE, "")
+        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
+        val keySpec = PKCS8EncodedKeySpec(priKey)
+        val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+        return keyFactory.generatePrivate(keySpec) as ECPrivateKey
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getECDHPublicKeyFromBase64String(publicKeyBase64: String): ECPublicKey {
+        val publicKeyBytes = java.util.Base64.getDecoder().decode(publicKeyBase64)
+        val keySpec = X509EncodedKeySpec(publicKeyBytes)
+        val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+        return keyFactory.generatePublic(keySpec) as ECPublicKey
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateDHSecret(publicSecret: String, senderId : String) {
         CoroutineScope(Dispatchers.IO).launch {
             val publicKey = getDHPublicKeyFromBase64String(publicSecret)
             val privateKey = getDHPrivateKeyFromBase64String()

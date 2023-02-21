@@ -15,6 +15,8 @@ import com.adreal.birdmessenger.databinding.ActivityStartBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.security.Security
 import java.util.*
 
 class StartActivity : AppCompatActivity() {
@@ -36,6 +38,7 @@ class StartActivity : AppCompatActivity() {
         SharedPreferences.init(this)
 
         CoroutineScope(Dispatchers.IO).launch {
+            Encryption().addBouncyCastleProvider()
             startActivityViewModel.saveInstallationId()
             startActivityViewModel.saveToken()
             startActivityViewModel.subscribeToCommonTopic()
@@ -43,6 +46,7 @@ class StartActivity : AppCompatActivity() {
             startActivityViewModel.uploadToken()
 //            startActivityViewModel.storeAESPublicKey()
             startActivityViewModel.storeDHKeyPair()
+            startActivityViewModel.storeECDHKeyPair()
         }
     }
 

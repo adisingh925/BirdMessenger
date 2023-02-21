@@ -99,7 +99,7 @@ class PeopleViewModel : ViewModel() {
                 val senderId = SharedPreferences.read("installationId", "")
                 val receiverName = it.get("name").toString()
                 val receiverImage = it.get("image").toString()
-                Encryption().generateSecret(it.get("DHPublic").toString(), id)
+                Encryption().generateECDHSecret(it.get("ECDHPublic").toString(), id)
                 val time = System.currentTimeMillis()
 
                 val jsonObject = JSONObject()
