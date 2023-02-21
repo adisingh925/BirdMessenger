@@ -125,22 +125,22 @@ class StartActivityViewModel : ViewModel() {
     }
 
     private fun uploadDHPublicKey(DHPublic : String) {
-        if(SharedPreferences.read("isKeyUploaded","") == ""){
+        if(SharedPreferences.read("isDHKeyUploaded","") == ""){
             firebaseInstallations.id.addOnSuccessListener {
                 val data = hashMapOf("DHPublic" to DHPublic)
                 firestore.collection(Constants.Users).document(it).set(data, SetOptions.merge())
-                SharedPreferences.write("isKeyUploaded","y")
+                SharedPreferences.write("isDHKeyUploaded","y")
                 Log.d("DH Public Key","uploaded")
             }
         }
     }
 
-    private fun uploadECDHPublicKey(DHPublic : String) {
-        if(SharedPreferences.read("isKeyUploaded","") == ""){
+    private fun uploadECDHPublicKey(ECDHPublic : String) {
+        if(SharedPreferences.read("isECDHKeyUploaded","") == ""){
             firebaseInstallations.id.addOnSuccessListener {
-                val data = hashMapOf("ECDHPublic" to DHPublic)
+                val data = hashMapOf("ECDHPublic" to ECDHPublic)
                 firestore.collection(Constants.Users).document(it).set(data, SetOptions.merge())
-                SharedPreferences.write("isKeyUploaded","y")
+                SharedPreferences.write("isECDHKeyUploaded","y")
                 Log.d("ECDH Public Key","uploaded")
             }
         }
