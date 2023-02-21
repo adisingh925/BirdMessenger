@@ -17,8 +17,10 @@ import com.adreal.birdmessenger.Constants.Constants.Users
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
+import com.adreal.birdmessenger.Model.EncryptedData
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Model.UserModel
+import com.adreal.birdmessenger.Model.encryptedModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.Retrofit.SendChatObject
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -26,6 +28,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,64 +78,68 @@ class FcmMessagingService : FirebaseMessagingService() {
             }
 
             "chat" -> {
-                var senderToken = ""
-                var senderName = ""
-                val id = remoteMessage.data["id"].toString().toLong()
-                val senderId = remoteMessage.data["senderId"].toString()
-                val sendTime = remoteMessage.data["sendTime"].toString().toLong()
-                val receiverId = remoteMessage.data["receiverId"].toString()
-                val msg = remoteMessage.data["msg"].toString()
-                val iv = remoteMessage.data["iv"].toString()
-                val hmac = remoteMessage.data["HMAC"].toString()
-                val receivedTime = System.currentTimeMillis()
+                if (remoteMessage.data.isNotEmpty()) {
 
-                val chatData = ChatModel(
-                    id,
-                    senderId,
-                    iv,
-                    sendTime,
-                    receiverId,
-                    receivedTime,
-                    msg,
-                    1,
-                    0
-                )
+                    val encryptedData = remoteMessage.data["ED"]
+                    val hash = remoteMessage.data["HASH"]
+                    val senderId = remoteMessage.data["SI"]
+                    val initializationVector = remoteMessage.data["IV"]
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    if (Encryption().compareMessageAndHMAC(
-                            Encryption().decryptUsingSymmetricEncryption(
-                                java.util.Base64.getDecoder().decode(msg),
-                                java.util.Base64.getDecoder().decode(iv),
+                    if (!encryptedData.isNullOrBlank() && !hash.isNullOrBlank() && !senderId.isNullOrBlank() && !initializationVector.isNullOrBlank()) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                        if (Encryption().compareMessageAndHMAC(encryptedData, hash, senderId)) {
+                            val receivedTime = System.currentTimeMillis()
+                            val decryptedData = Encryption().decryptUsingSymmetricEncryption(
+                                java.util.Base64.getDecoder().decode(encryptedData),
+                                java.util.Base64.getDecoder().decode(initializationVector),
                                 senderId
-                            ), hmac, senderId
-                        )
-                    ) {
-                        Log.d("valid message","verified")
-                        Database.getDatabase(applicationContext).Dao().addChatData(chatData)
-                        senderToken =
-                            Database.getDatabase(applicationContext).Dao().getToken(senderId)
-                        senderName =
-                            Database.getDatabase(applicationContext).Dao().getUserName(senderId)
-                        prepareChatNotification(senderId, "", senderName, senderToken)
+                            )
 
-                        val state = SharedPreferences.read(senderId, "n")
+                            val data = Gson().fromJson(decryptedData, encryptedModel::class.java)
 
-                        val jsonObject = JSONObject()
-                        val dataJson = JSONObject()
-                        jsonObject.put("id", id)
-                        dataJson.put("data", jsonObject)
-                            .put("to", senderToken)
+                            val chatData = ChatModel(
+                                    data.id.toLong(),
+                                    senderId,
+                                    data.id.toLong(),
+                                    data.receiverId,
+                                    receivedTime,
+                                    data.msg,
+                                    1,
+                                    0
+                                )
 
-                        if (state == "y") {
-                            updateLastMessage(msg, senderId, receivedTime)
-                            jsonObject.put("messageStatus", 3)
-                            jsonObject.put("category", "seen")
-                            sendData(dataJson.toString(), chatData, 3)
-                        } else {
-                            incrementUnreadMessages(senderId, msg, receivedTime)
-                            jsonObject.put("messageStatus", 2)
-                            jsonObject.put("category", "delivered")
-                            sendData(dataJson.toString(), chatData, 2)
+                                val senderData = Database.getDatabase(applicationContext).Dao().getTokenAndUserName(senderId)
+
+                                if (senderData.userToken.isNotBlank() && senderData.userName.isNotBlank()) {
+                                    Database.getDatabase(applicationContext).Dao().addChatData(chatData)
+
+                                    prepareChatNotification(
+                                        senderId,
+                                        senderData.userName,
+                                        senderData.userToken
+                                    )
+
+                                    val state = SharedPreferences.read(senderId, "n")
+
+                                    val jsonObject = JSONObject()
+                                    val dataJson = JSONObject()
+
+                                    jsonObject.put("id", chatData.messageId)
+                                    dataJson.put("data", jsonObject).put("to", senderData.userToken)
+
+                                    if (state == "y") {
+                                        updateLastMessage(chatData.msg, senderId, receivedTime)
+                                        jsonObject.put("messageStatus", 3)
+                                        jsonObject.put("category", "seen")
+                                        sendData(dataJson.toString(), chatData, 3)
+                                    } else {
+                                        incrementUnreadMessages(senderId, chatData.msg, receivedTime)
+                                        jsonObject.put("messageStatus", 2)
+                                        jsonObject.put("category", "delivered")
+                                        sendData(dataJson.toString(), chatData, 2)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -214,7 +221,6 @@ class FcmMessagingService : FirebaseMessagingService() {
     @RequiresApi(Build.VERSION_CODES.P)
     private fun prepareChatNotification(
         senderId: String,
-        subText: String,
         senderName: String,
         senderToken: String
     ) {
@@ -224,9 +230,7 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        val data =
-            Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
-                .asReversed()
+        val data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId).asReversed()
 
         val imageString =
             Database.getDatabase(applicationContext).Dao().readImageStringForUser(senderId)
@@ -248,7 +252,6 @@ class FcmMessagingService : FirebaseMessagingService() {
             createNotification(
                 SharedPreferences.read("${senderId}_notification_id", 0),
                 style,
-                subText,
                 senderId,
                 senderName,
                 senderToken
@@ -300,7 +303,6 @@ class FcmMessagingService : FirebaseMessagingService() {
     private fun createNotification(
         notificationId: Int,
         style: Notification.MessagingStyle?,
-        subtext: String,
         senderId: String,
         senderName: String,
         senderToken: String

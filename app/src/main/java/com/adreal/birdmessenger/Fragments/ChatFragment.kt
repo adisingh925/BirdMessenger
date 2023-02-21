@@ -1,9 +1,12 @@
 package com.adreal.birdmessenger.Fragments
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +29,7 @@ import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
 import com.adreal.birdmessenger.ViewModel.ChatViewModel
 import com.adreal.birdmessenger.ViewModel.OfflineViewModel
 import com.adreal.birdmessenger.databinding.FragmentChatBinding
+import com.bumptech.glide.Glide
 import com.vanniktech.emoji.EmojiPopup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,6 +77,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         initRecycler()
         chatViewModel.getStatus(receiverId)
         chatViewModel.updateUnseenMessageCount(receiverId)
+//        setImage()
 
         binding.toolbar.inflateMenu(R.menu.delete)
 
@@ -104,15 +109,6 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         binding.edittext.addTextChangedListener {
             chatViewModel.startTyping(binding.edittext.text.toString())
-//            if (binding.edittext.text.toString() != "") {
-//                binding.camera.isVisible = false
-//                binding.attachment.isVisible = false
-//                binding.fab.setImageResource(R.drawable.send)
-//            } else {
-//                binding.camera.isVisible = true
-//                binding.attachment.isVisible = true
-//                binding.fab.setImageResource(R.drawable.mic)
-//            }
         }
 
         offlineViewModel.readAllMessages(senderId, receiverId).observe(viewLifecycleOwner)
@@ -158,27 +154,24 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         binding.fab.setOnClickListener {
             if (!binding.edittext.text.isNullOrBlank()) {
-                val actualMsg = binding.edittext.text.toString().trim()
                 val time = System.currentTimeMillis()
-                val hmac = Encryption().generateHMAC(actualMsg,receiverId)
-                val msg = Encryption().encryptUsingSymmetricKey(actualMsg, receiverId)
+                val msg = binding.edittext.text.toString().trim()
                 binding.edittext.text.clear()
                 binding.edittext.append("")
 
                 val chatData = ChatModel(
                     time,
-                    SharedPreferences.read("installationId", ""),
-                    java.util.Base64.getEncoder().encodeToString(msg.iv),
+                    SharedPreferences.read("installationId", "").toString(),
                     time,
                     receiverId,
                     null,
-                    java.util.Base64.getEncoder().encodeToString(msg.cipherText),
+                    msg,
                     0,
                     0
                 )
 
                 chatViewModel.sendMsg(
-                    chatData, receiverToken, hmac
+                    chatData, receiverToken
                 )
 
                 chatViewModel.storeMsg(chatData)
@@ -186,6 +179,15 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         }
 
         return binding.root
+    }
+
+    private fun setImage(){
+        binding.toolbar.logo = resources.getDrawable(R.drawable.programmer)
+    }
+
+    private fun base64ToBitmap(data: String?): Bitmap {
+        val imageBytes = Base64.decode(data, 0)
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
     private fun initRecycler() {

@@ -46,7 +46,7 @@ class UploadWorker(appContext: Context, workerParameters: WorkerParameters) : Wo
 
                 dataJson.put("data",jsonObject)
                 dataJson.put("android",priority)
-                dataJson.put("to",Database.getDatabase(applicationContext).Dao().getToken(it.receiverId.toString()))
+//                dataJson.put("to",Database.getDatabase(applicationContext).Dao().getToken(it.receiverId.toString()))
 
                 priority.put("priority","high")
 

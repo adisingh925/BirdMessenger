@@ -1,15 +1,18 @@
 package com.adreal.birdmessenger.ViewModel
 
 import android.app.Application
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Database.Database
+import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Retrofit.SendChatObject
@@ -26,6 +29,7 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.Base64
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -65,8 +69,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun storeMsg(data: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().addChatData(data)
-            Database.getDatabase(getApplication()).Dao()
-                .updateLastMessage(data.msg.toString(), data.sendTime!!, data.receiverId.toString())
+            Database.getDatabase(getApplication()).Dao().updateLastMessage(data.msg, data.sendTime, data.receiverId)
         }
     }
 
@@ -76,22 +79,30 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun sendMsg(data: ChatModel, receiverToken: String, hmac: String) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun sendMsg(data: ChatModel, receiverToken: String) {
         viewModelScope.launch(Dispatchers.IO) {
+
             val jsonObject = JSONObject()
             val dataJson = JSONObject()
             val priority = JSONObject()
+            val encryptedJson = JSONObject()
 
-            jsonObject.put("id", data.messageId)
-            jsonObject.put("senderId", data.senderId)
-            jsonObject.put("sendTime", data.sendTime)
-            jsonObject.put("receiverId", data.receiverId)
-            jsonObject.put("msg", data.msg)
-            jsonObject.put("messageStatus", 0)
-            jsonObject.put("mediaType", 0)
-            jsonObject.put("category", "chat")
-            jsonObject.put("iv", data.iv)
-            jsonObject.put("HMAC", hmac)
+            encryptedJson.put("id", data.messageId)
+            encryptedJson.put("senderId", data.senderId)
+            encryptedJson.put("receiverId", data.receiverId)
+            encryptedJson.put("msg", data.msg)
+            encryptedJson.put("messageStatus", 0)
+            encryptedJson.put("mediaType", 0)
+
+            val encryptedData = Encryption().encryptUsingSymmetricKey(encryptedJson.toString(), data.receiverId)
+            val hash = Encryption().generateHMAC(Base64.getEncoder().encodeToString(encryptedData.cipherText),data.receiverId)
+
+            jsonObject.put("ED",Base64.getEncoder().encodeToString(encryptedData.cipherText))
+            jsonObject.put("IV", Base64.getEncoder().encodeToString(encryptedData.iv))
+            jsonObject.put("SI",data.senderId)
+            jsonObject.put("HASH", hash)
+            jsonObject.put("category","chat")
 
             priority.put("priority", "medium")
 

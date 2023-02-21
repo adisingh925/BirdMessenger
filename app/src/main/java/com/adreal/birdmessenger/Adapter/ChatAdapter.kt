@@ -58,13 +58,7 @@ class ChatAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].sendTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(
-                senderTextView, Encryption().decryptUsingSymmetricEncryption(
-                    Base64.getDecoder().decode(messageList[position].msg),
-                    Base64.getDecoder().decode(messageList[position].iv),
-                    messageList[position].receiverId.toString()
-                )
-            )
+            markWon.setMarkdown(senderTextView, messageList[position].msg)
             senderTime.text = time
         }
     }
@@ -77,14 +71,7 @@ class ChatAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(position: Int) {
             val time = getDate(messageList[position].receiveTime.toString().toLong(), "hh:mm aa")
-            markWon.setMarkdown(
-                receiverTextView,
-                Encryption().decryptUsingSymmetricEncryption(
-                    Base64.getDecoder().decode(messageList[position].msg),
-                    Base64.getDecoder().decode(messageList[position].iv),
-                    messageList[position].senderId.toString()
-                )
-            )
+            markWon.setMarkdown(receiverTextView, messageList[position].msg)
             receiverTime.text = time
         }
     }

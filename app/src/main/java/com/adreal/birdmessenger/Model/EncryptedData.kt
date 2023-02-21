@@ -1,6 +1,6 @@
 package com.adreal.birdmessenger.Model
 
-data class EncryptedData(val cipherText : ByteArray, val iv : ByteArray, val HMAC : String) {
+data class EncryptedData(val cipherText : ByteArray, val iv : ByteArray) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

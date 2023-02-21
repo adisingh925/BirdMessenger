@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.Dao
 import com.adreal.birdmessenger.Model.ChatModel
+import com.adreal.birdmessenger.Model.TokenAndUserName
 import com.adreal.birdmessenger.Model.UserModel
 
 @Dao
@@ -65,8 +66,8 @@ interface Dao {
     @Query("delete from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId")
     fun deleteAllChatsBetweenUsers(senderId : String, receiverId : String)
 
-    @Query("select userToken from user where Id = :uid")
-    fun getToken(uid : String) : String
+    @Query("select userToken, userName from user where Id = :uid")
+    fun getTokenAndUserName(uid : String) : TokenAndUserName
 
     @Query("select userName from user where Id = :uid")
     fun getUserName(uid : String) : String

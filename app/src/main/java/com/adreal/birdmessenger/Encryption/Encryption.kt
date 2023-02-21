@@ -4,6 +4,7 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.adreal.birdmessenger.Model.EncryptedData
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -146,11 +147,11 @@ class Encryption {
     @RequiresApi(Build.VERSION_CODES.O)
     fun encryptUsingSymmetricKey(data : String, id : String) : EncryptedData{
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
-        cipher.init(Cipher.ENCRYPT_MODE, getStoredSymmetricEncryptionKey(id))
+        cipher.init(Cipher.ENCRYPT_MODE, getStoredSymmetricEncryptionKey(id), SecureRandom())
         val iv = cipher.iv
         val plaintext = data.toByteArray()
         val ciphertext = cipher.doFinal(plaintext)
-        return EncryptedData(ciphertext,iv,generateHMAC(data,id))
+        return EncryptedData(ciphertext,iv)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -170,8 +171,8 @@ class Encryption {
         try {
             val mac = Mac.getInstance(HMAC_ALGORITHM)
             mac.init(getStoredSymmetricEncryptionKey(id))
-            val HMAC = mac.doFinal(message.toByteArray())
-            return HMAC.joinToString("") { String.format("%02x", it) }
+            val hash = mac.doFinal(message.toByteArray())
+            return hash.joinToString("") { String.format("%02x", it) }
         } catch (e: NoSuchAlgorithmException) {
             e.printStackTrace()
         } catch (e: InvalidKeyException) {
@@ -181,8 +182,8 @@ class Encryption {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun compareMessageAndHMAC(msg : String, HMAC : String, id : String) : Boolean{
-        return generateHMAC(msg,id) == HMAC
+    fun compareMessageAndHMAC(msg : String, hash : String, id : String) : Boolean{
+        return generateHMAC(msg,id) == hash
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
