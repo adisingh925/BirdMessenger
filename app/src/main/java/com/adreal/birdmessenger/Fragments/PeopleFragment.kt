@@ -243,7 +243,7 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
 
     override fun onItemClick(data: UserModel, type: Int) {
         if (type == 0) {
-            showImageDialog(data.imageByteArray.toString())
+            showImageDialog(data.imageByteArray)
         } else {
             val bundle = Bundle()
             bundle.putString("receiverName", data.userName)

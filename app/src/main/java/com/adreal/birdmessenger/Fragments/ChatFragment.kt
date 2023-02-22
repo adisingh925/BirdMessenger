@@ -18,14 +18,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.adreal.birdmessenger.Activity.StartActivity
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Database.Database
-import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
+import com.adreal.birdmessenger.SendPayload
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
 import com.adreal.birdmessenger.ViewModel.ChatViewModel
 import com.adreal.birdmessenger.ViewModel.OfflineViewModel
 import com.adreal.birdmessenger.databinding.FragmentChatBinding
-import com.bumptech.glide.Glide
 import com.vanniktech.emoji.EmojiPopup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +60,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     lateinit var senderId: String
     var fromNotification = false
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -72,7 +71,6 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         initRecycler()
         chatViewModel.getStatus(receiverId)
         chatViewModel.updateUnseenMessageCount(receiverId)
-//        setImage()
 
         binding.toolbar.inflateMenu(R.menu.delete)
 
@@ -165,24 +163,14 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                     0
                 )
 
-                chatViewModel.sendMsg(
-                    chatData, receiverToken
-                )
-
-                chatViewModel.storeMsg(chatData)
+                CoroutineScope(Dispatchers.IO).launch {
+                    context?.let { it1 -> SendPayload.sendMsg(chatData,receiverToken, it1) }
+                    context?.let { it1 -> SendPayload.storeMsg(chatData, it1) }
+                }
             }
         }
 
         return binding.root
-    }
-
-    private fun setImage(){
-        binding.toolbar.logo = resources.getDrawable(R.drawable.programmer)
-    }
-
-    private fun base64ToBitmap(data: String?): Bitmap {
-        val imageBytes = Base64.decode(data, 0)
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
     private fun initRecycler() {
@@ -209,7 +197,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                     .put("category", "seen")
                 dataJson.put("data", jsonObject)
                     .put("to", receiverToken)
-                chatViewModel.send(dataJson.toString(), data)
+                context?.let { SendPayload.send(dataJson.toString(), data, it) }
             }
         }
     }

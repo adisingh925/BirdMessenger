@@ -39,8 +39,8 @@ interface Dao {
     @Query("select * from message")
     fun readAllMessagesForWorker() : List<ChatModel>
 
-    @Query("select * from message where senderId = :senderId and messageStatus = 1 or messageStatus = 2 order by sendTime desc limit 4")
-    fun readMessagesForNotification(senderId : String) : List<ChatModel>
+    @Query("select * from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId order by sendTime desc limit 4")
+    fun readMessagesForNotification(senderId : String, receiverId : String) : List<ChatModel>
 
     @Query("select imageByteArray from user where Id = :senderId")
     fun readImageStringForUser(senderId : String) : String
