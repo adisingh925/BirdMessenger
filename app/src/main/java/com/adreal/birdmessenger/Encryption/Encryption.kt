@@ -3,6 +3,7 @@ package com.adreal.birdmessenger.Encryption
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.security.keystore.KeyProtection
 import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.adreal.birdmessenger.Model.EncryptedData
@@ -28,9 +29,11 @@ import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
 import javax.crypto.Mac
+import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@RequiresApi(Build.VERSION_CODES.P)
 class Encryption {
     companion object {
         const val DH_ALGORITHM = "DH"
@@ -51,10 +54,6 @@ class Encryption {
         const val EC_PRIVATE = "ECDHPrivate"
         const val ELLIPTIC_CURVE_ALGORITHM = "ECDH"
         const val CURVE_NAME = "secp256r1"
-    }
-
-    private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply {
-        load(null)
     }
 
     fun addBouncyCastleProvider(){
@@ -101,7 +100,6 @@ class Encryption {
         return keyGen.generateKeyPair()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun generateECDHSecret(publicSecret: String, senderId: String){
         val publicKey = getECDHPublicKeyFromBase64String(publicSecret)
         val privateKey = getECDHPrivateKeyFromBase64String()
@@ -119,7 +117,6 @@ class Encryption {
         return keyAgreement.generateSecret()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getECDHPrivateKeyFromBase64String(): ECPrivateKey {
         val privateSecret = SharedPreferences.read(EC_PRIVATE, "")
         val priKey = java.util.Base64.getDecoder().decode(privateSecret)
@@ -128,7 +125,6 @@ class Encryption {
         return keyFactory.generatePrivate(keySpec) as ECPrivateKey
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getECDHPublicKeyFromBase64String(publicKeyBase64: String): ECPublicKey {
         val publicKeyBytes = java.util.Base64.getDecoder().decode(publicKeyBase64)
         val keySpec = X509EncodedKeySpec(publicKeyBytes)
@@ -136,7 +132,6 @@ class Encryption {
         return keyFactory.generatePublic(keySpec) as ECPublicKey
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun generateDHSecret(publicSecret: String, senderId : String) {
         CoroutineScope(Dispatchers.IO).launch {
             val publicKey = getDHPublicKeyFromBase64String(publicSecret)
@@ -162,7 +157,6 @@ class Encryption {
         return clientKeyAgreement.generateSecret()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getDHPrivateKeyFromBase64String() : PrivateKey{
         val privateSecret = SharedPreferences.read(DH_PRIVATE, "")
         val priKey = java.util.Base64.getDecoder().decode(privateSecret)
@@ -171,7 +165,6 @@ class Encryption {
         return keyFactoryPrivate.generatePrivate(keySpecPrivate)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getDHPublicKeyFromBase64String(publicKeyBase64 : String) : PublicKey{
         val publicKeyString = java.util.Base64.getDecoder().decode(publicKeyBase64)
         val publicKeySpecification = X509EncodedKeySpec(publicKeyString)
@@ -179,7 +172,6 @@ class Encryption {
         return keyFactory.generatePublic(publicKeySpecification)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun encrypt(data: String, publicKey: String): String {
         val key = java.util.Base64.getDecoder().decode(publicKey)
 
@@ -201,7 +193,6 @@ class Encryption {
         return String(decodedData)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun encryptUsingSymmetricKey(data : String, id : String) : EncryptedData{
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         cipher.init(Cipher.ENCRYPT_MODE, getStoredSymmetricEncryptionKey(id), SecureRandom())
@@ -211,7 +202,6 @@ class Encryption {
         return EncryptedData(ciphertext,iv)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun decryptUsingSymmetricEncryption(
         cipherText: ByteArray,
         iv: ByteArray,
@@ -223,7 +213,7 @@ class Encryption {
         return cipher.doFinal(cipherText).decodeToString()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     fun generateHMAC(message: String, id : String): String {
         try {
             val mac = Mac.getInstance(HMAC_ALGORITHM)
@@ -238,12 +228,11 @@ class Encryption {
         return ""
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun compareMessageAndHMAC(msg : String, hash : String, id : String) : Boolean{
         return generateHMAC(msg,id) == hash
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.P)
     fun getStoredSymmetricEncryptionKey(id : String) : SecretKeySpec{
         return SecretKeySpec(java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM)
     }
