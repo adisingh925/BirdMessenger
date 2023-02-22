@@ -1,5 +1,6 @@
 package com.adreal.birdmessenger.Encryption
 
+import android.content.Context
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
+import org.bouncycastle.jcajce.provider.symmetric.ARC4.Base
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.interfaces.ECPrivateKey
 import org.bouncycastle.jce.interfaces.ECPublicKey
@@ -26,10 +28,7 @@ import java.math.BigInteger
 import java.security.*
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import javax.crypto.Cipher
-import javax.crypto.KeyAgreement
-import javax.crypto.Mac
-import javax.crypto.SecretKey
+import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
@@ -54,7 +53,65 @@ class Encryption {
         const val EC_PRIVATE = "ECDHPrivate"
         const val ELLIPTIC_CURVE_ALGORITHM = "ECDH"
         const val CURVE_NAME = "secp256r1"
+        private const val TRANSFORMATION = "$AES_ALGORITHM/$BLOCK_MODE_AES/$PADDING_AES"
     }
+
+    /**All KeyStore Related operations **/
+
+    private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply {
+        load(null)
+    }
+
+    private val encryptCipher = Cipher.getInstance(TRANSFORMATION).apply {
+        init(Cipher.ENCRYPT_MODE, getKey(), SecureRandom())
+    }
+
+    private fun getDecryptCipherForIV(iv: ByteArray): Cipher {
+        return Cipher.getInstance(TRANSFORMATION).apply {
+            init(Cipher.DECRYPT_MODE, getKey(), IvParameterSpec(iv))
+        }
+    }
+
+    private fun getKey(): SecretKey {
+        val existingKey = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
+        return existingKey?.secretKey ?: createKey()
+    }
+
+    private fun createKey(): SecretKey {
+        return KeyGenerator.getInstance(AES_ALGORITHM).apply {
+            init(
+                KeyGenParameterSpec.Builder(
+                    KEY_ALIAS,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+                )
+                    .setBlockModes(BLOCK_MODE_AES)
+                    .setEncryptionPaddings(PADDING_AES)
+                    .setUserAuthenticationRequired(false)
+                    .setRandomizedEncryptionRequired(true)
+                    .setUnlockedDeviceRequired(false)
+                    .build()
+            )
+        }.generateKey()
+    }
+
+    fun encrypt(id: String, bytes: ByteArray): ByteArray {
+        storeIV(id, encryptCipher.iv)
+        return encryptCipher.doFinal(bytes)
+    }
+
+    private fun decrypt(id : String, encryptedData: ByteArray): ByteArray {
+        return getDecryptCipherForIV(getIV(id)).doFinal(encryptedData)
+    }
+
+    private fun storeIV(id: String, byteArray: ByteArray) {
+        SharedPreferences.write("IV-$id",java.util.Base64.getEncoder().encodeToString(byteArray))
+    }
+
+    private fun getIV(id: String): ByteArray {
+        return java.util.Base64.getDecoder().decode(SharedPreferences.read("IV-$id",""))
+    }
+
+    /** END **/
 
     fun addBouncyCastleProvider() {
         Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
@@ -65,36 +122,6 @@ class Encryption {
         val keyPairGenerator = KeyPairGenerator.getInstance(DH_ALGORITHM)
         keyPairGenerator.initialize(DH_KEY_SIZE, SecureRandom())
         return keyPairGenerator.generateKeyPair()
-    }
-
-    fun getAsymmetricKeyPair(): KeyPair {
-        val keyStore = KeyStore.getInstance(PROVIDER)
-        keyStore.load(null)
-
-        val privateKey = keyStore.getKey(KEY_ALIAS, null) as PrivateKey?
-        val publicKey = keyStore.getCertificate(KEY_ALIAS)?.publicKey
-
-        return if (privateKey != null && publicKey != null) {
-            KeyPair(publicKey, privateKey)
-        } else {
-            createAsymmetricKeyPair()
-        }
-    }
-
-    private fun createAsymmetricKeyPair(): KeyPair {
-        val generator: KeyPairGenerator =
-            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
-        val builder = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-            .setKeySize(4096)
-
-        generator.initialize(builder.build())
-
-        return generator.generateKeyPair()
     }
 
     fun generateECDHKeyPair(): KeyPair {
@@ -109,10 +136,7 @@ class Encryption {
         val privateKey = getECDHPrivateKeyFromBase64String()
         val sharedSecret = getECDHSharedSecret(publicKey, privateKey)
         val aesKey = getAESKeyFromSharedSecret(sharedSecret)
-        SharedPreferences.write(
-            "$AES_SYMMETRIC_KEY--$senderId",
-            java.util.Base64.getEncoder().encodeToString(aesKey.encoded)
-        )
+        SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId", java.util.Base64.getEncoder().encodeToString(encrypt("IV-$senderId",aesKey.encoded)))
     }
 
     private fun getECDHSharedSecret(publicKey: ECPublicKey, privateKey: ECPrivateKey): ByteArray {
@@ -128,7 +152,7 @@ class Encryption {
 
     private fun getECDHPrivateKeyFromBase64String(): ECPrivateKey {
         val privateSecret = SharedPreferences.read(EC_PRIVATE, "")
-        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
+        val priKey = decrypt("IV-$EC_PRIVATE",java.util.Base64.getDecoder().decode(privateSecret))
         val keySpec = PKCS8EncodedKeySpec(priKey)
         val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
         return keyFactory.generatePrivate(keySpec) as ECPrivateKey
@@ -171,7 +195,7 @@ class Encryption {
 
     private fun getDHPrivateKeyFromBase64String(): PrivateKey {
         val privateSecret = SharedPreferences.read(DH_PRIVATE, "")
-        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
+        val priKey = decrypt("IV-DHPrivate",java.util.Base64.getDecoder().decode(privateSecret))
         val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
         val keyFactoryPrivate = KeyFactory.getInstance(DH_ALGORITHM)
         return keyFactoryPrivate.generatePrivate(keySpecPrivate)
@@ -182,27 +206,6 @@ class Encryption {
         val publicKeySpecification = X509EncodedKeySpec(publicKeyString)
         val keyFactory = KeyFactory.getInstance(DH_ALGORITHM)
         return keyFactory.generatePublic(publicKeySpecification)
-    }
-
-    fun encrypt(data: String, publicKey: String): String {
-        val key = java.util.Base64.getDecoder().decode(publicKey)
-
-        val keySpec = X509EncodedKeySpec(key)
-        val keyFactory = KeyFactory.getInstance(RSA_ALGORITHM)
-        val pubKey = keyFactory.generatePublic(keySpec)
-
-        val cipher: Cipher = Cipher.getInstance(TRANSFORMATION_RSA)
-        cipher.init(Cipher.ENCRYPT_MODE, pubKey)
-        val bytes = cipher.doFinal(data.toByteArray())
-        return Base64.encodeToString(bytes, Base64.DEFAULT)
-    }
-
-    fun decrypt(data: String): String {
-        val cipher: Cipher = Cipher.getInstance(TRANSFORMATION_RSA)
-        cipher.init(Cipher.DECRYPT_MODE, getAsymmetricKeyPair().private)
-        val encryptedData = Base64.decode(data, Base64.DEFAULT)
-        val decodedData = cipher.doFinal(encryptedData)
-        return String(decodedData)
     }
 
     fun encryptUsingSymmetricKey(data: String, id: String): EncryptedData {
@@ -225,7 +228,6 @@ class Encryption {
         return cipher.doFinal(cipherText).decodeToString()
     }
 
-
     fun generateHMAC(message: String, id: String): String {
         try {
             val mac = Mac.getInstance(HMAC_ALGORITHM)
@@ -246,9 +248,6 @@ class Encryption {
 
     @RequiresApi(Build.VERSION_CODES.P)
     fun getStoredSymmetricEncryptionKey(id: String): SecretKeySpec {
-        return SecretKeySpec(
-            java.util.Base64.getDecoder()
-                .decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM
-        )
+        return SecretKeySpec(decrypt("IV-$id",java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))), AES_ALGORITHM)
     }
 }
