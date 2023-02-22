@@ -12,13 +12,13 @@
         android:scaleType="centerCrop"
         android:src="@drawable/chat12"/>
 
-    <Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         app:tint = "@color/white"
         android:background="#273746"
-        android:navigationIcon="@drawable/back"
         android:layout_height="?actionBarSize"
+        app:navigationIcon="@drawable/back"
         android:titleTextColor="?attr/font_color"
         android:subtitleTextColor="@color/green"
         app:layout_constraintTop_toTopOf="parent"
@@ -26,7 +26,7 @@
         app:layout_constraintBottom_toTopOf="@id/recyclerView"
         app:layout_constraintLeft_toLeftOf="parent">
 
-    </Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

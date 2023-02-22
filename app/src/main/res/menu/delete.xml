@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/video"
+        android:title="Video Call"
+        app:showAsAction="ifRoom"
+        android:iconTint="@color/white"
+        android:icon="@drawable/video"/>
+
+    <item
+        android:id="@+id/call"
+        android:title="Voice Call"
+        app:showAsAction="ifRoom"
+        android:iconTint="@color/white"
+        android:icon="@drawable/call"/>
+
     <item
         android:id="@+id/delete"
         android:title="Delete"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         android:icon="@drawable/delete"/>
+
 </menu>
