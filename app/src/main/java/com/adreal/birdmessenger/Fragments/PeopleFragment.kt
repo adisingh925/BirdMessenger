@@ -33,7 +33,6 @@ import com.adreal.birdmessenger.ViewModel.PeopleViewModel
 import com.adreal.birdmessenger.databinding.AddUserDialogBinding
 import com.adreal.birdmessenger.databinding.FragmentPeopleBinding
 import com.bumptech.glide.Glide
-import io.noties.markwon.Markwon
 import java.io.ByteArrayOutputStream
 
 class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
