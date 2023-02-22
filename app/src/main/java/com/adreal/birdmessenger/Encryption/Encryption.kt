@@ -56,7 +56,7 @@ class Encryption {
         const val CURVE_NAME = "secp256r1"
     }
 
-    fun addBouncyCastleProvider(){
+    fun addBouncyCastleProvider() {
         Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
         Security.addProvider(BouncyCastleProvider())
     }
@@ -82,8 +82,12 @@ class Encryption {
     }
 
     private fun createAsymmetricKeyPair(): KeyPair {
-        val generator: KeyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
-        val builder = KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+        val generator: KeyPairGenerator =
+            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER)
+        val builder = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
             .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
             .setKeySize(4096)
@@ -93,26 +97,31 @@ class Encryption {
         return generator.generateKeyPair()
     }
 
-    fun generateECDHKeyPair() : KeyPair{
+    fun generateECDHKeyPair(): KeyPair {
         val ecSpec = ECNamedCurveTable.getParameterSpec(CURVE_NAME)
         val keyGen = KeyPairGenerator.getInstance(ELLIPTIC_CURVE_ALGORITHM, BouncyCastleProvider())
         keyGen.initialize(ecSpec, SecureRandom())
         return keyGen.generateKeyPair()
     }
 
-    fun generateECDHSecret(publicSecret: String, senderId: String){
+    fun generateECDHSecret(publicSecret: String, senderId: String) {
         val publicKey = getECDHPublicKeyFromBase64String(publicSecret)
         val privateKey = getECDHPrivateKeyFromBase64String()
         val sharedSecret = getECDHSharedSecret(publicKey, privateKey)
         val aesKey = getAESKeyFromSharedSecret(sharedSecret)
-        SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId",java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
+        SharedPreferences.write(
+            "$AES_SYMMETRIC_KEY--$senderId",
+            java.util.Base64.getEncoder().encodeToString(aesKey.encoded)
+        )
     }
 
     private fun getECDHSharedSecret(publicKey: ECPublicKey, privateKey: ECPrivateKey): ByteArray {
-        val keyAgreement = KeyAgreement.getInstance(ELLIPTIC_CURVE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME)
+        val keyAgreement =
+            KeyAgreement.getInstance(ELLIPTIC_CURVE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME)
         keyAgreement.init(privateKey, SecureRandom())
         val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
-        val ecPublicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKey.encoded)) as ECPublicKey
+        val ecPublicKey =
+            keyFactory.generatePublic(X509EncodedKeySpec(publicKey.encoded)) as ECPublicKey
         keyAgreement.doPhase(ecPublicKey, true)
         return keyAgreement.generateSecret()
     }
@@ -132,20 +141,23 @@ class Encryption {
         return keyFactory.generatePublic(keySpec) as ECPublicKey
     }
 
-    fun generateDHSecret(publicSecret: String, senderId : String) {
+    fun generateDHSecret(publicSecret: String, senderId: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val publicKey = getDHPublicKeyFromBase64String(publicSecret)
             val privateKey = getDHPrivateKeyFromBase64String()
             val sharedSecret = getDHSharedSecret(publicKey, privateKey)
             val aesKey = getAESKeyFromSharedSecret(sharedSecret)
-            SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId",java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
+            SharedPreferences.write(
+                "$AES_SYMMETRIC_KEY--$senderId",
+                java.util.Base64.getEncoder().encodeToString(aesKey.encoded)
+            )
         }
     }
 
     private fun getAESKeyFromSharedSecret(sharedSecret: ByteArray): SecretKeySpec {
         val hashBasedKeyDerivation = HKDFBytesGenerator(SHA256Digest())
         val derivedKey = ByteArray(32)
-        hashBasedKeyDerivation.init(HKDFParameters(sharedSecret,null,null))
+        hashBasedKeyDerivation.init(HKDFParameters(sharedSecret, null, null))
         hashBasedKeyDerivation.generateBytes(derivedKey, 0, 32)
         return SecretKeySpec(derivedKey, AES_ALGORITHM)
     }
@@ -157,7 +169,7 @@ class Encryption {
         return clientKeyAgreement.generateSecret()
     }
 
-    private fun getDHPrivateKeyFromBase64String() : PrivateKey{
+    private fun getDHPrivateKeyFromBase64String(): PrivateKey {
         val privateSecret = SharedPreferences.read(DH_PRIVATE, "")
         val priKey = java.util.Base64.getDecoder().decode(privateSecret)
         val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
@@ -165,7 +177,7 @@ class Encryption {
         return keyFactoryPrivate.generatePrivate(keySpecPrivate)
     }
 
-    private fun getDHPublicKeyFromBase64String(publicKeyBase64 : String) : PublicKey{
+    private fun getDHPublicKeyFromBase64String(publicKeyBase64: String): PublicKey {
         val publicKeyString = java.util.Base64.getDecoder().decode(publicKeyBase64)
         val publicKeySpecification = X509EncodedKeySpec(publicKeyString)
         val keyFactory = KeyFactory.getInstance(DH_ALGORITHM)
@@ -193,13 +205,13 @@ class Encryption {
         return String(decodedData)
     }
 
-    fun encryptUsingSymmetricKey(data : String, id : String) : EncryptedData{
+    fun encryptUsingSymmetricKey(data: String, id: String): EncryptedData {
         val cipher = Cipher.getInstance(TRANSFORMATION_AES)
         cipher.init(Cipher.ENCRYPT_MODE, getStoredSymmetricEncryptionKey(id), SecureRandom())
         val iv = cipher.iv
         val plaintext = data.toByteArray()
         val ciphertext = cipher.doFinal(plaintext)
-        return EncryptedData(ciphertext,iv)
+        return EncryptedData(ciphertext, iv)
     }
 
     fun decryptUsingSymmetricEncryption(
@@ -214,7 +226,7 @@ class Encryption {
     }
 
 
-    fun generateHMAC(message: String, id : String): String {
+    fun generateHMAC(message: String, id: String): String {
         try {
             val mac = Mac.getInstance(HMAC_ALGORITHM)
             mac.init(getStoredSymmetricEncryptionKey(id))
@@ -228,12 +240,15 @@ class Encryption {
         return ""
     }
 
-    fun compareMessageAndHMAC(msg : String, hash : String, id : String) : Boolean{
-        return generateHMAC(msg,id) == hash
+    fun compareMessageAndHMAC(msg: String, hash: String, id: String): Boolean {
+        return generateHMAC(msg, id) == hash
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
-    fun getStoredSymmetricEncryptionKey(id : String) : SecretKeySpec{
-        return SecretKeySpec(java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM)
+    fun getStoredSymmetricEncryptionKey(id: String): SecretKeySpec {
+        return SecretKeySpec(
+            java.util.Base64.getDecoder()
+                .decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM
+        )
     }
 }

@@ -79,7 +79,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.P)
     fun sendMsg(data: ChatModel, receiverToken: String) {
         viewModelScope.launch(Dispatchers.IO) {
 

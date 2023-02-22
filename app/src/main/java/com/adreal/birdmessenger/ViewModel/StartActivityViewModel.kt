@@ -24,7 +24,7 @@ import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
-
+@RequiresApi(Build.VERSION_CODES.P)
 class StartActivityViewModel : ViewModel() {
 
     private val realtimeDatabase = Firebase.database
@@ -101,7 +101,6 @@ class StartActivityViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun storeAESPublicKey() {
         if (SharedPreferences.read("AESPublic", "") == "") {
             val asymmetricKey = Encryption().getAsymmetricKeyPair()
@@ -112,7 +111,6 @@ class StartActivityViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun storeDHKeyPair() {
         if (SharedPreferences.read("DHKeyPair", "") == "") {
             val DHKey = Encryption().generateDHKeyPair()
@@ -146,7 +144,6 @@ class StartActivityViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun storeECDHKeyPair() {
         if (SharedPreferences.read("ECDHKeyPair", "") == "") {
             val ECDHKey = Encryption().generateECDHKeyPair()

@@ -231,8 +231,7 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        val data =
-            Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
+        val data = Database.getDatabase(applicationContext).Dao().readMessagesForNotification(senderId)
                 .asReversed()
 
         val imageString =
@@ -248,7 +247,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         val style = Notification.MessagingStyle(person)
 
         for (i in data) {
-            style.addMessage(i.msg.toString(), i.sendTime!!, person)
+            style.addMessage(i.msg, i.sendTime, person)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -19,6 +19,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.P)
 class StartActivity : AppCompatActivity() {
 
     private val binding by lazy {
@@ -29,7 +30,6 @@ class StartActivity : AppCompatActivity() {
         ViewModelProvider(this)[StartActivityViewModel::class.java]
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_BirdMessenger)
