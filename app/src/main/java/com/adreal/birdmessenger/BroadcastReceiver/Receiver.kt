@@ -48,30 +48,31 @@ class Receiver : BroadcastReceiver() {
             }
 
             if (intent.action == FcmMessagingService.REMOTE_INPUT) {
-                val remoteInput = RemoteInput.getResultsFromIntent(intent)
-                val senderId = intent.getStringExtra(FcmMessagingService.ID)
-                val token = intent.getStringExtra(FcmMessagingService.TOKEN)
-                val senderName = intent.getStringExtra(FcmMessagingService.SENDER_NAME)
-                if (remoteInput != null && senderId != null && token != null && senderName != null) {
-                    val response = remoteInput.getCharSequence(FcmMessagingService.KEY_TEXT_REPLY).toString()
-                    val time = System.currentTimeMillis()
+                CoroutineScope(Dispatchers.IO).launch {
+                    val remoteInput = RemoteInput.getResultsFromIntent(intent)
+                    val senderId = intent.getStringExtra(FcmMessagingService.ID)
+                    val token = intent.getStringExtra(FcmMessagingService.TOKEN)
+                    val senderName = intent.getStringExtra(FcmMessagingService.SENDER_NAME)
+                    if (remoteInput != null && senderId != null && token != null && senderName != null) {
+                        val response = remoteInput.getCharSequence(FcmMessagingService.KEY_TEXT_REPLY).toString()
+                        val time = System.currentTimeMillis()
 
-                    val data = ChatModel(
-                        time,
-                        SharedPreferences.read("installationId", "").toString(),
-                        time,
-                        senderId,
-                        null,
-                        response,
-                        0,
-                        0
-                    )
+                        val data = ChatModel(
+                            time,
+                            SharedPreferences.read("installationId", "").toString(),
+                            time,
+                            senderId,
+                            null,
+                            response,
+                            0,
+                            0
+                        )
 
-                    CoroutineScope(Dispatchers.IO).launch {
                         SendPayload.sendMsg(data,token,context)
-                        SendPayload.storeMsg(data,context)
-                    }.invokeOnCompletion {
+
                         CoroutineScope(Dispatchers.IO).launch {
+                            SendPayload.storeMsg(data,context)
+                        }.invokeOnCompletion {
                             FcmMessagingService().prepareChatNotification(senderId,senderName,token,context, manager)
                         }
                     }

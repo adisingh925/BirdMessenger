@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Encryption.Encryption
+import com.adreal.birdmessenger.FcmMessagingService.FcmMessagingService
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Retrofit.SendChatObject
@@ -54,46 +55,12 @@ object SendPayload {
             dataJson.put("android", priority)
             dataJson.put("to", receiverToken)
 
-            send(dataJson.toString(), data, context)
+            FcmMessagingService().sendData(dataJson.toString(), data.messageId, 1,context)
         }
-    }
-
-    fun send(dataJson: String, data: ChatModel, context: Context) {
-        val json = "application/json; charset=utf-8".toMediaTypeOrNull()
-        val body = dataJson.toRequestBody(json)
-        val chat = SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}", body)
-
-        chat.enqueue(object : Callback<ChatResponse> {
-            override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
-                Log.d("response", response.toString())
-                val details = response.body()
-                if (details != null) {
-                    if (data.messageStatus == 0) {
-                        data.messageStatus = 1
-                        updateMsg(data,context)
-                    } else {
-                        data.messageStatus = 3
-                        updateMsg(data,context)
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
-                Log.d("msg sending failed", t.message.toString())
-            }
-        })
     }
 
     fun storeMsg(data: ChatModel, context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Database.getDatabase(context).Dao().addChatData(data)
-            Database.getDatabase(context).Dao().updateLastMessage(data.msg, data.sendTime, data.receiverId)
-        }
-    }
-
-    fun updateMsg(data: ChatModel, context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Database.getDatabase(context).Dao().updateChatData(data)
-        }
+        Database.getDatabase(context).Dao().addChatData(data)
+        Database.getDatabase(context).Dao().updateLastMessage(data.msg, data.sendTime, data.receiverId)
     }
 }

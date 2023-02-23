@@ -245,6 +245,8 @@ class FcmMessagingService : FirebaseMessagingService() {
 
         val data = Database.getDatabase(context).Dao().readMessagesForNotification(senderId, SharedPreferences.read("installationId","").toString())
 
+        Log.d("data",data.toString())
+
         val style = Notification.MessagingStyle("hello")
 
         for (i in data.asReversed()) {

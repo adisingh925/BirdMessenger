@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.adreal.birdmessenger.Activity.StartActivity
 import com.adreal.birdmessenger.Adapter.ChatAdapter
 import com.adreal.birdmessenger.Database.Database
+import com.adreal.birdmessenger.FcmMessagingService.FcmMessagingService
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.SendPayload
@@ -187,17 +188,15 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         binding.toolbar.title = receiverName
     }
 
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onItemSeen(data: ChatModel) {
         if (data.senderId == receiverId) {
             CoroutineScope(Dispatchers.IO).launch {
-                val jsonObject = JSONObject()
-                val dataJson = JSONObject()
-                jsonObject.put("id", data.messageId)
-                    .put("messageStatus", 3)
-                    .put("category", "seen")
-                dataJson.put("data", jsonObject)
-                    .put("to", receiverToken)
-                context?.let { SendPayload.send(dataJson.toString(), data, it) }
+                context?.let {
+                    FcmMessagingService().createJson(3,"seen",data.messageId,receiverToken,
+                        it
+                    )
+                }
             }
         }
     }
