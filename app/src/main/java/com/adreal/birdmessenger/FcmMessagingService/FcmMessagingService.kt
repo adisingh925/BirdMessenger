@@ -140,36 +140,12 @@ class FcmMessagingService : FirebaseMessagingService() {
                 }
             }
 
-            "delivered" -> {
+            "delivered", "seen" -> {
                 updateMessageStatus(
                     remoteMessage.data["messageStatus"].toString().toInt(),
                     remoteMessage.data["id"].toString().toLong(),
                     applicationContext
                 )
-            }
-
-            "seen" -> {
-                updateMessageStatus(
-                    remoteMessage.data["messageStatus"].toString().toInt(),
-                    remoteMessage.data["id"].toString().toLong(),
-                    applicationContext
-                )
-            }
-
-            "img" -> {
-
-            }
-
-            "video" -> {
-
-            }
-
-            "doc" -> {
-
-            }
-
-            "location" -> {
-
             }
         }
 

@@ -13,6 +13,6 @@ data class ChatModel(
     @ColumnInfo(name = "receiverId") val receiverId : String,
     @ColumnInfo(name = "receiveTime") var receiveTime : Long?,
     @ColumnInfo(name = "msg") val msg : String,
-    @ColumnInfo(name = "messageStatus") var messageStatus : Int,       //0 - sending, 1 - sent, 2 - delivered, 3 - seen
+    @ColumnInfo(name = "messageStatus") var messageStatus : Int,       //0 - sending, 1 - sent, 2 - delivering, 3 - delivered 4 - seen pending 5 - seen
     @ColumnInfo(name = "mediaType") var mediaType : Int,               //0 - text, 1 - image, 2 - audio, 3 - video, 4 - contact, 5 - location, 6 - document
 )
