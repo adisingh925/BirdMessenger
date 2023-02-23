@@ -36,7 +36,7 @@ interface Dao {
     @Query("update user set unreadMessages = 0 where Id = :id")
     fun resetUnseenMessageCount(id : String)
 
-    @Query("select * from message")
+    @Query("select * from message where messageStatus = 0 or messageStatus = 5 or messageStatus = 4")
     fun readAllMessagesForWorker() : List<ChatModel>
 
     @Query("select * from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId order by sendTime desc limit 4")
@@ -69,6 +69,12 @@ interface Dao {
     @Query("select userToken, userName from user where Id = :uid")
     fun getTokenAndUserName(uid : String) : TokenAndUserName
 
+    @Query("select userToken from user where Id = :uid")
+    fun getToken(uid : String) : String
+
     @Query("select userName from user where Id = :uid")
     fun getUserName(uid : String) : String
+
+    @Query("select * from message where messageId = :mid")
+    fun getMessage(mid : Long) : ChatModel
 }

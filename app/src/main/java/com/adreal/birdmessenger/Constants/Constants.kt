@@ -9,4 +9,5 @@ object Constants {
     const val CONNECTION_TIMEOUT = 60
     const val READ_TIMEOUT = 60
     const val WRITE_TIMEOUT = 60
+    const val WORKER_TAG = "Upload"
 }

@@ -68,7 +68,7 @@ class Receiver : BroadcastReceiver() {
                             0
                         )
 
-                        SendPayload.sendMsg(data,token,context)
+                        SendPayload.sendMsg(data,token,context,1)
 
                         CoroutineScope(Dispatchers.IO).launch {
                             SendPayload.storeMsg(data,context)

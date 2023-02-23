@@ -25,7 +25,7 @@ import java.util.*
 object SendPayload {
 
     @RequiresApi(Build.VERSION_CODES.P)
-    fun sendMsg(data: ChatModel, receiverToken: String, context: Context) {
+    fun sendMsg(data: ChatModel, receiverToken: String, context: Context, updateTo : Int) {
         CoroutineScope(Dispatchers.IO).launch {
 
             val jsonObject = JSONObject()
@@ -55,7 +55,7 @@ object SendPayload {
             dataJson.put("android", priority)
             dataJson.put("to", receiverToken)
 
-            FcmMessagingService().sendData(dataJson.toString(), data.messageId, 1,context)
+            FcmMessagingService().sendData(dataJson.toString(), data.messageId, updateTo,context)
         }
     }
 

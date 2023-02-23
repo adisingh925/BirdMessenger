@@ -12,9 +12,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavDeepLinkBuilder
+import androidx.work.*
 import com.adreal.birdmessenger.BroadcastReceiver.Receiver
 import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Constants.Constants.Users
+import com.adreal.birdmessenger.Constants.Constants.WORKER_TAG
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
@@ -24,6 +26,7 @@ import com.adreal.birdmessenger.Model.encryptedModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.Retrofit.SendChatObject
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
+import com.adreal.birdmessenger.Worker.UploadWorker
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -288,6 +291,32 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
                     Log.d("msg sending failed", t.message.toString())
+                    if(status == 3){
+                        updateMessageStatus(4, messageId, context)
+                    }else if(status == 2){
+                        updateMessageStatus(5, messageId, context)
+                    }
+
+                    val constraint = Constraints.Builder()
+                        .setRequiresDeviceIdle(false)
+                        .setRequiresCharging(false)
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .setRequiresBatteryNotLow(false)
+                        .setRequiresStorageNotLow(false)
+                        .build()
+
+                    val workerPayload = Data.Builder()
+                        .putLong("id", messageId)
+                    .build()
+
+                    val workRequest: WorkRequest = OneTimeWorkRequestBuilder<UploadWorker>()
+                        .setConstraints(constraint)
+                        .addTag(WORKER_TAG)
+                        .setInputData(workerPayload)
+                        .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                        .build()
+
+                    WorkManager.getInstance(context).enqueue(workRequest)
                 }
             })
         }

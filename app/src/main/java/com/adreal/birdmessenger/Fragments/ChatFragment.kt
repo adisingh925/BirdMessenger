@@ -165,7 +165,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 )
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    context?.let { it1 -> SendPayload.sendMsg(chatData,receiverToken, it1) }
+                    context?.let { it1 -> SendPayload.sendMsg(chatData,receiverToken, it1, 1) }
                     context?.let { it1 -> SendPayload.storeMsg(chatData, it1) }
                 }
             }
