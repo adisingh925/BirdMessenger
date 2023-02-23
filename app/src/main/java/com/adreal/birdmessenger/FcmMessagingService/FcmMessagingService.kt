@@ -40,7 +40,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 class FcmMessagingService : FirebaseMessagingService() {
 
@@ -115,7 +114,7 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                                 Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                if(SharedPreferences.read("MUTE-$senderId","n") == "y"){
+                                if(SharedPreferences.read("MUTE-$senderId","n") == "n"){
                                     val notificationManager = getSystemService(NotificationManager::class.java)
                                     prepareChatNotification(
                                         senderId,
