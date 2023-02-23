@@ -1,5 +1,7 @@
 package com.adreal.birdmessenger.ViewModel
 
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -143,5 +145,10 @@ class StartActivityViewModel : ViewModel() {
             Log.d("ECDH Key Pair storing","success")
             uploadECDHPublicKey(Base64.getEncoder().encodeToString(ECDHKey.public.encoded))
         }
+    }
+
+    fun dismissNotifications(context: Context) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancelAll()
     }
 }

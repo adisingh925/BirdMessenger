@@ -114,7 +114,7 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                                 Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                if(SharedPreferences.read("MUTE-$senderId","n") == "n"){
+                                if(SharedPreferences.read("MUTE-$senderId","n") == "y"){
                                     val notificationManager = getSystemService(NotificationManager::class.java)
                                     prepareChatNotification(
                                         senderId,

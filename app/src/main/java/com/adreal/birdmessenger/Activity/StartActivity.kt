@@ -38,6 +38,7 @@ class StartActivity : AppCompatActivity() {
         SharedPreferences.init(this)
 
         CoroutineScope(Dispatchers.IO).launch {
+            startActivityViewModel.dismissNotifications(this@StartActivity)
             Encryption().addBouncyCastleProvider()
             startActivityViewModel.saveInstallationId()
             startActivityViewModel.saveToken()
