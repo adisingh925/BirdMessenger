@@ -43,6 +43,10 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.O)
 class FcmMessagingService : FirebaseMessagingService() {
 
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+    }
+
     private val firestore = Firebase.firestore
     var data : MutableList<ChatModel> = ArrayList()
 
