@@ -7,8 +7,9 @@ import androidx.room.RoomDatabase
 import com.adreal.birdmessenger.Dao.Dao
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.UserModel
+import com.adreal.birdmessenger.Model.VideoCallModel
 
-@Database(entities = [UserModel::class,ChatModel::class], version = 1, exportSchema = false)
+@Database(entities = [UserModel::class,ChatModel::class, VideoCallModel::class], version = 1, exportSchema = false)
 abstract class Database : RoomDatabase(){
 
     abstract fun Dao() : Dao

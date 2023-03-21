@@ -81,6 +81,11 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 R.id.delete -> {
                     showDeleteDialog()
                 }
+
+                R.id.video -> {
+//                    arguments?.putString("type","offerCandidate")
+                    findNavController().navigate(R.id.action_chatFragment_to_videoCall,arguments)
+                }
             }
             true
         }

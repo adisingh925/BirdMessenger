@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_chatFragment_to_peopleFragment"
             app:destination="@id/peopleFragment" />
+        <action
+            android:id="@+id/action_chatFragment_to_videoCall"
+            app:destination="@id/videoCall" />
     </fragment>
     <fragment
         android:id="@+id/peopleFragment"
@@ -38,4 +41,9 @@
             android:id="@+id/action_addPeople_to_chatFragment"
             app:destination="@id/chatFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/videoCall"
+        android:name="com.adreal.birdmessenger.Fragments.VideoCall"
+        android:label="fragment_video_call"
+        tools:layout="@layout/fragment_video_call" />
 </navigation>

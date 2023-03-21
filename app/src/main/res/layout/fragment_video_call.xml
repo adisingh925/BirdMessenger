@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".Fragments.VideoCall">
+
+    <ProgressBar
+        android:layout_centerInParent="true"
+        android:id="@+id/remote_view_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:gravity="center"
+        android:background="@drawable/curve_background"
+        android:backgroundTint="#17202A"
+        android:id="@+id/controls"
+        android:orientation="horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/mic_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="12dp"
+            app:tint="@color/white"
+            app:fabCustomSize="40dp"
+            app:backgroundTint="@color/cardview_dark_background"
+            app:srcCompat="@drawable/mic" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/video_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="12dp"
+            app:tint="@color/white"
+            app:fabCustomSize="40dp"
+            app:backgroundTint="@color/cardview_dark_background"
+            app:srcCompat="@drawable/video" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/end_call_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="14dp"
+            app:tint="@color/white"
+            android:padding="12dp"
+            app:backgroundTint="@android:color/holo_red_dark"
+            app:srcCompat="@drawable/end_call" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/switch_camera_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="12dp"
+            app:fabCustomSize="40dp"
+            android:layout_margin="14dp"
+            app:tint="@color/white"
+            app:backgroundTint="@color/cardview_dark_background"
+            app:srcCompat="@drawable/camera_switch" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/audio_output_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="14dp"
+            app:fabCustomSize="40dp"
+            android:padding="12dp"
+            app:tint="@color/white"
+            app:backgroundTint="@color/cardview_dark_background"
+            app:srcCompat="@drawable/speaker" />
+
+    </LinearLayout>
+
+</RelativeLayout>

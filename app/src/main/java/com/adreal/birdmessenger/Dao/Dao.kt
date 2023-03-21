@@ -6,6 +6,7 @@ import androidx.room.Dao
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.TokenAndUserName
 import com.adreal.birdmessenger.Model.UserModel
+import com.adreal.birdmessenger.Model.VideoCallModel
 
 @Dao
 interface Dao {
@@ -18,6 +19,15 @@ interface Dao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun addChatData(data : ChatModel)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun addCallData(data: VideoCallModel)
+
+    @Query("select * from CallData where id = :id")
+    fun isOfferReceived(id : String) : VideoCallModel
+
+    @Query("delete from CallData")
+    fun deleteCallData()
+
     @Update
     fun updateChatData(data : ChatModel)
 
@@ -29,6 +39,9 @@ interface Dao {
 
     @Query("select * from user order by lastMessageTimeStamp desc")
     fun readAllUsers() : LiveData<List<UserModel>>
+
+    @Query("select * from CallData")
+    fun getAllCalls() : LiveData<List<VideoCallModel>>
 
     @Query("update user set lastMessage = :msg, lastMessageTimeStamp = :time where Id = :id")
     fun updateLastMessage(msg: String, time: Long, id: String)

@@ -10,4 +10,6 @@ object Constants {
     const val READ_TIMEOUT = 60
     const val WRITE_TIMEOUT = 60
     const val WORKER_TAG = "Upload"
+    var isCallEnded: Boolean = false
+    var isIntiatedNow : Boolean = true
 }

@@ -22,6 +22,7 @@ import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.FCMResponse.ChatResponse
 import com.adreal.birdmessenger.Model.UserModel
+import com.adreal.birdmessenger.Model.VideoCallModel
 import com.adreal.birdmessenger.Model.encryptedModel
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.Retrofit.SendChatObject
@@ -51,7 +52,7 @@ class FcmMessagingService : FirebaseMessagingService() {
     }
 
     private val firestore = Firebase.firestore
-    var data : MutableList<ChatModel> = ArrayList()
+    var data: MutableList<ChatModel> = ArrayList()
 
     companion object {
         const val CHANNEL_ID = "chat_notification"
@@ -104,7 +105,8 @@ class FcmMessagingService : FirebaseMessagingService() {
                                     senderId
                                 )
 
-                                val data = Gson().fromJson(decryptedData, encryptedModel::class.java)
+                                val data =
+                                    Gson().fromJson(decryptedData, encryptedModel::class.java)
 
                                 val chatData = ChatModel(
                                     data.id.toLong(),
@@ -117,12 +119,14 @@ class FcmMessagingService : FirebaseMessagingService() {
                                     0
                                 )
 
-                                val senderData = Database.getDatabase(applicationContext).Dao().getTokenAndUserName(senderId)
+                                val senderData = Database.getDatabase(applicationContext).Dao()
+                                    .getTokenAndUserName(senderId)
 
                                 Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                if(SharedPreferences.read("MUTE-$senderId","n") == "y"){
-                                    val notificationManager = getSystemService(NotificationManager::class.java)
+                                if (SharedPreferences.read("MUTE-$senderId", "n") == "y") {
+                                    val notificationManager =
+                                        getSystemService(NotificationManager::class.java)
                                     prepareChatNotification(
                                         senderId,
                                         senderData.userName,
@@ -136,10 +140,22 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                                 if (state == "y") {
                                     updateLastMessage(chatData.msg, senderId, receivedTime)
-                                    createJson(3,"seen",chatData.messageId, senderData.userToken, applicationContext)
+                                    createJson(
+                                        3,
+                                        "seen",
+                                        chatData.messageId,
+                                        senderData.userToken,
+                                        applicationContext
+                                    )
                                 } else {
                                     incrementUnreadMessages(senderId, chatData.msg, receivedTime)
-                                    createJson(2,"delivered",chatData.messageId,senderData.userToken, applicationContext)
+                                    createJson(
+                                        2,
+                                        "delivered",
+                                        chatData.messageId,
+                                        senderData.userToken,
+                                        applicationContext
+                                    )
                                 }
                             }
                         }
@@ -154,13 +170,42 @@ class FcmMessagingService : FirebaseMessagingService() {
                     applicationContext
                 )
             }
+
+            "answerCandidate", "offerCandidate" -> {
+                val id = remoteMessage.data["id"]
+                val serverUrl = remoteMessage.data["serverUrl"]
+                val sdpMid = remoteMessage.data["sdpMid"]
+                val sdpMLineIndex = remoteMessage.data["sdpMLineIndex"]
+                val sdpCandidate = remoteMessage.data["sdpCandidate"]
+                val type = remoteMessage.data["category"]
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    Database.getDatabase(applicationContext).Dao()
+                        .addCallData(
+                            VideoCallModel(
+                                id!!,
+                                serverUrl!!,
+                                sdpMid!!,
+                                sdpMLineIndex!!,
+                                sdpCandidate!!,
+                                type!!
+                            )
+                        )
+                }
+            }
         }
 
         super.onMessageReceived(remoteMessage)
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
-    fun createJson(status : Int, category : String, messageId : Long, token : String, context: Context){
+    fun createJson(
+        status: Int,
+        category: String,
+        messageId: Long,
+        token: String,
+        context: Context
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             val jsonObject = JSONObject()
             val dataJson = JSONObject()
@@ -225,23 +270,41 @@ class FcmMessagingService : FirebaseMessagingService() {
             SharedPreferences.write("count", count + 1)
         }
 
-        val data = Database.getDatabase(context).Dao().readMessagesForNotification(senderId, SharedPreferences.read("installationId","").toString())
+        val data = Database.getDatabase(context).Dao().readMessagesForNotification(
+            senderId,
+            SharedPreferences.read("installationId", "").toString()
+        )
 
-        Log.d("data",data.toString())
+        Log.d("data", data.toString())
 
         val style = Notification.MessagingStyle("hello")
 
         for (i in data.asReversed()) {
-            if(i.senderId == senderId){
+            if (i.senderId == senderId) {
                 val person = Person.Builder()
-                    .setIcon(Icon.createWithBitmap(getCircleBitmap(Database.getDatabase(context).Dao().readImageStringForUser(senderId))))
+                    .setIcon(
+                        Icon.createWithBitmap(
+                            getCircleBitmap(
+                                Database.getDatabase(context).Dao().readImageStringForUser(senderId)
+                            )
+                        )
+                    )
                     .setName(senderName)
                     .build()
 
                 style.addMessage(i.msg, i.sendTime, person)
-            }else{
+            } else {
                 val person = Person.Builder()
-                    .setIcon(Icon.createWithBitmap(getCircleBitmap(SharedPreferences.read("image","").toString())))
+                    .setIcon(
+                        Icon.createWithBitmap(
+                            getCircleBitmap(
+                                SharedPreferences.read(
+                                    "image",
+                                    ""
+                                ).toString()
+                            )
+                        )
+                    )
                     .setName("You")
                     .build()
 
@@ -266,7 +329,7 @@ class FcmMessagingService : FirebaseMessagingService() {
     @RequiresApi(Build.VERSION_CODES.P)
     fun sendData(
         data: String,
-        messageId : Long,
+        messageId: Long,
         status: Int,
         context: Context
     ) {
@@ -274,7 +337,8 @@ class FcmMessagingService : FirebaseMessagingService() {
 
             val json = "application/json; charset=utf-8".toMediaTypeOrNull()
             val body = data.toRequestBody(json)
-            val chat = SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}", body)
+            val chat =
+                SendChatObject.sendChatInstance.sendChat("key=${Constants.FCM_API_KEY}", body)
 
             chat.enqueue(object : Callback<ChatResponse> {
                 override fun onResponse(
@@ -291,9 +355,9 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
                     Log.d("msg sending failed", t.message.toString())
-                    if(status == 3){
+                    if (status == 3) {
                         updateMessageStatus(4, messageId, context)
-                    }else if(status == 2){
+                    } else if (status == 2) {
                         updateMessageStatus(5, messageId, context)
                     }
 
@@ -307,7 +371,7 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                     val workerPayload = Data.Builder()
                         .putLong("id", messageId)
-                    .build()
+                        .build()
 
                     val workRequest: WorkRequest = OneTimeWorkRequestBuilder<UploadWorker>()
                         .setConstraints(constraint)
@@ -335,15 +399,15 @@ class FcmMessagingService : FirebaseMessagingService() {
         senderId: String,
         senderName: String,
         senderToken: String,
-        data : List<ChatModel>,
+        data: List<ChatModel>,
         context: Context,
         notificationManager: NotificationManager
     ) {
         val subArray = LongArray(4)
         for (i in data.indices) {
-            if(data[i].senderId == senderId){
+            if (data[i].senderId == senderId) {
                 subArray[i] = data[i].messageId
-            }else{
+            } else {
                 subArray[i] = 0
             }
         }
@@ -352,9 +416,9 @@ class FcmMessagingService : FirebaseMessagingService() {
         val readIntent = Intent(context, Receiver::class.java)
         readIntent.action = READ
         readIntent.putExtra(ID, senderId)
-        readIntent.putExtra(NOTIFICATION_ID,notificationId)
-        readIntent.putExtra(MESSAGES,subArray)
-        readIntent.putExtra(TOKEN,senderToken)
+        readIntent.putExtra(NOTIFICATION_ID, notificationId)
+        readIntent.putExtra(MESSAGES, subArray)
+        readIntent.putExtra(TOKEN, senderToken)
         val pendingReadIntent = PendingIntent.getBroadcast(
             context, notificationId * 2, readIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -375,9 +439,9 @@ class FcmMessagingService : FirebaseMessagingService() {
         val remoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).build()
         val resultIntent = Intent(context, Receiver::class.java)
         resultIntent.action = REMOTE_INPUT
-        resultIntent.putExtra(ID,senderId)
-        resultIntent.putExtra(TOKEN,senderToken)
-        resultIntent.putExtra(SENDER_NAME,senderName)
+        resultIntent.putExtra(ID, senderId)
+        resultIntent.putExtra(TOKEN, senderToken)
+        resultIntent.putExtra(SENDER_NAME, senderName)
 
         val resultPendingIntent = PendingIntent.getBroadcast(
             context,
@@ -388,16 +452,22 @@ class FcmMessagingService : FirebaseMessagingService() {
 
         val replyAction = Notification.Action.Builder(
             android.R.drawable.ic_input_add,
-            REPLY, resultPendingIntent)
+            REPLY, resultPendingIntent
+        )
             .addRemoteInput(remoteInput)
             .build()
 
         //mute action
-        val muteIntent = Intent(context,Receiver::class.java)
+        val muteIntent = Intent(context, Receiver::class.java)
         muteIntent.action = MUTE
-        muteIntent.putExtra(ID,senderId)
-        muteIntent.putExtra(NOTIFICATION_ID,notificationId)
-        val mutePendingIntent = PendingIntent.getBroadcast(context, notificationId * 5, muteIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        muteIntent.putExtra(ID, senderId)
+        muteIntent.putExtra(NOTIFICATION_ID, notificationId)
+        val mutePendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId * 5,
+            muteIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         //notification click handling
         val args = Bundle()
@@ -429,7 +499,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         builder.setDeleteIntent(deletePendingIntent)
         builder.addAction(R.drawable.cancel, "Mark as Read", pendingReadIntent)
         builder.addAction(replyAction)
-        builder.addAction(R.drawable.cancel,"Mute",mutePendingIntent)
+        builder.addAction(R.drawable.cancel, "Mute", mutePendingIntent)
         builder.setAutoCancel(true)
         builder.setShowWhen(true)
 
@@ -438,7 +508,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun getCircleBitmap(imageString : String): Bitmap? {
+    private fun getCircleBitmap(imageString: String): Bitmap? {
         val imageBytes = Base64.decode(imageString, 0)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
