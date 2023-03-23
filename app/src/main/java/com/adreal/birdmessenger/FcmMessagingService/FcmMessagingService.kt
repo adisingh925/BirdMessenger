@@ -105,8 +105,7 @@ class FcmMessagingService : FirebaseMessagingService() {
                                     senderId
                                 )
 
-                                val data =
-                                    Gson().fromJson(decryptedData, encryptedModel::class.java)
+                                val data = Gson().fromJson(decryptedData, encryptedModel::class.java)
 
                                 val chatData = ChatModel(
                                     data.id.toLong(),
@@ -119,14 +118,12 @@ class FcmMessagingService : FirebaseMessagingService() {
                                     0
                                 )
 
-                                val senderData = Database.getDatabase(applicationContext).Dao()
-                                    .getTokenAndUserName(senderId)
+                                val senderData = Database.getDatabase(applicationContext).Dao().getTokenAndUserName(senderId)
 
                                 Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                if (SharedPreferences.read("MUTE-$senderId", "n") == "y") {
-                                    val notificationManager =
-                                        getSystemService(NotificationManager::class.java)
+                                if (SharedPreferences.read("MUTE-$senderId", "y") == "y") {
+                                    val notificationManager = getSystemService(NotificationManager::class.java)
                                     prepareChatNotification(
                                         senderId,
                                         senderData.userName,
