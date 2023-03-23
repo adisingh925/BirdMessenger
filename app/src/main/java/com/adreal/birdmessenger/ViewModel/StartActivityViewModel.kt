@@ -107,7 +107,7 @@ class StartActivityViewModel : ViewModel() {
         if (SharedPreferences.read("DHKeyPair", "") == "") {
             val DHKey = Encryption().generateDHKeyPair()
             SharedPreferences.write("DHPublic", Base64.getEncoder().encodeToString(DHKey.public.encoded))
-            SharedPreferences.write("DHPrivate",Base64.getEncoder().encodeToString(Encryption().encrypt("IV-DHPrivate",DHKey.private.encoded)))
+            SharedPreferences.write("DHPrivate",Base64.getEncoder().encodeToString(DHKey.private.encoded))
             SharedPreferences.write("DHKeyPair","y")
             Log.d("DH Key Pair storing","success")
             uploadDHPublicKey(Base64.getEncoder().encodeToString(DHKey.public.encoded))
@@ -140,7 +140,7 @@ class StartActivityViewModel : ViewModel() {
         if (SharedPreferences.read("ECDHKeyPair", "") == "") {
             val ECDHKey = Encryption().generateECDHKeyPair()
             SharedPreferences.write("ECDHPublic", Base64.getEncoder().encodeToString(ECDHKey.public.encoded))
-            SharedPreferences.write("ECDHPrivate",Base64.getEncoder().encodeToString(Encryption().encrypt("IV-ECDHPrivate",ECDHKey.private.encoded)))
+            SharedPreferences.write("ECDHPrivate",Base64.getEncoder().encodeToString(ECDHKey.private.encoded))
             SharedPreferences.write("ECDHKeyPair","y")
             Log.d("ECDH Key Pair storing","success")
             uploadECDHPublicKey(Base64.getEncoder().encodeToString(ECDHKey.public.encoded))

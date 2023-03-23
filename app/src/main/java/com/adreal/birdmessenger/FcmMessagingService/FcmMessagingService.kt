@@ -361,26 +361,25 @@ class FcmMessagingService : FirebaseMessagingService() {
                         updateMessageStatus(5, messageId, context)
                     }
 
-                    val constraint = Constraints.Builder()
-                        .setRequiresDeviceIdle(false)
-                        .setRequiresCharging(false)
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .setRequiresBatteryNotLow(false)
-                        .setRequiresStorageNotLow(false)
-                        .build()
+                    if(SharedPreferences.read("isWorkEnqueued","f") == "f") {
+                        SharedPreferences.write("isWorkEnqueued","t")
 
-                    val workerPayload = Data.Builder()
-                        .putLong("id", messageId)
-                        .build()
+                        val constraint = Constraints.Builder()
+                            .setRequiresDeviceIdle(false)
+                            .setRequiresCharging(false)
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiresBatteryNotLow(false)
+                            .setRequiresStorageNotLow(false)
+                            .build()
 
-                    val workRequest: WorkRequest = OneTimeWorkRequestBuilder<UploadWorker>()
-                        .setConstraints(constraint)
-                        .addTag(WORKER_TAG)
-                        .setInputData(workerPayload)
-                        .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                        .build()
+                        val workRequest: WorkRequest = OneTimeWorkRequestBuilder<UploadWorker>()
+                            .setConstraints(constraint)
+                            .addTag(WORKER_TAG)
+                            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                            .build()
 
-                    WorkManager.getInstance(context).enqueue(workRequest)
+                        WorkManager.getInstance(context).enqueue(workRequest)
+                    }
                 }
             })
         }

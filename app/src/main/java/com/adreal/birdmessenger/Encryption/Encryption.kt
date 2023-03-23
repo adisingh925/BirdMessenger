@@ -136,7 +136,7 @@ class Encryption {
         val privateKey = getECDHPrivateKeyFromBase64String()
         val sharedSecret = getECDHSharedSecret(publicKey, privateKey)
         val aesKey = getAESKeyFromSharedSecret(sharedSecret)
-        SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId", java.util.Base64.getEncoder().encodeToString(encrypt("IV-$senderId",aesKey.encoded)))
+        SharedPreferences.write("$AES_SYMMETRIC_KEY--$senderId", java.util.Base64.getEncoder().encodeToString(aesKey.encoded))
     }
 
     private fun getECDHSharedSecret(publicKey: ECPublicKey, privateKey: ECPrivateKey): ByteArray {
@@ -152,7 +152,7 @@ class Encryption {
 
     private fun getECDHPrivateKeyFromBase64String(): ECPrivateKey {
         val privateSecret = SharedPreferences.read(EC_PRIVATE, "")
-        val priKey = decrypt("IV-$EC_PRIVATE",java.util.Base64.getDecoder().decode(privateSecret))
+        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
         val keySpec = PKCS8EncodedKeySpec(priKey)
         val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
         return keyFactory.generatePrivate(keySpec) as ECPrivateKey
@@ -195,7 +195,7 @@ class Encryption {
 
     private fun getDHPrivateKeyFromBase64String(): PrivateKey {
         val privateSecret = SharedPreferences.read(DH_PRIVATE, "")
-        val priKey = decrypt("IV-DHPrivate",java.util.Base64.getDecoder().decode(privateSecret))
+        val priKey = java.util.Base64.getDecoder().decode(privateSecret)
         val keySpecPrivate = PKCS8EncodedKeySpec(priKey)
         val keyFactoryPrivate = KeyFactory.getInstance(DH_ALGORITHM)
         return keyFactoryPrivate.generatePrivate(keySpecPrivate)
@@ -248,6 +248,6 @@ class Encryption {
 
     @RequiresApi(Build.VERSION_CODES.P)
     fun getStoredSymmetricEncryptionKey(id: String): SecretKeySpec {
-        return SecretKeySpec(decrypt("IV-$id",java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", ""))), AES_ALGORITHM)
+        return SecretKeySpec(java.util.Base64.getDecoder().decode(SharedPreferences.read("$AES_SYMMETRIC_KEY--$id", "")), AES_ALGORITHM)
     }
 }
