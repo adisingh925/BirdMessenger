@@ -39,9 +39,6 @@ class VideoCall : Fragment() {
     lateinit var receiverToken: String
     lateinit var receiverName: String
 
-    private val appId = "489ab3de83944e87b7ffd278c4ccf35b"
-    private val channelName = "birdMessenger"
-    private val token = "007eJxTYAiWinnSd+ecyz7Vu4HFmzcl+jXlPEpx1tJkl56lk35sv7YCg4mFZWKScUqqhbGliUmqhXmSeVpaipG5RbJJcnKasWlS7nHZlIZARgZlvqWsjAwQCOLzMiRlFqX4phYXp+alpxYxMAAAJrohlQ==/PSU4sYGABUuyIy"
     private val uid = 0
     private var isJoined = false
     private var agoraEngine: RtcEngine? = null
@@ -58,16 +55,7 @@ class VideoCall : Fragment() {
         // Inflate the layout for this fragment
         initValues()
 
-        if (context?.let { checkSelfPermission(it,CAMERA_PERMISSION) }
-            == PackageManager.PERMISSION_GRANTED && context?.let { checkSelfPermission(it,CAMERA_PERMISSION) }
-            == PackageManager.PERMISSION_GRANTED) {
-            showMessage("all permission granted")
-            setupVideoSDKEngine()
-            joinChannel()
-
-        }else{
-            requestCameraAndAudioPermission()
-        }
+        checkForPermission()
 
         binding.switchCameraButton.setOnClickListener {
             agoraEngine?.switchCamera()
@@ -107,6 +95,18 @@ class VideoCall : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun checkForPermission() {
+        if (context?.let { checkSelfPermission(it,CAMERA_PERMISSION) }
+            == PackageManager.PERMISSION_GRANTED && context?.let { checkSelfPermission(it,CAMERA_PERMISSION) }
+            == PackageManager.PERMISSION_GRANTED) {
+            showMessage("all permission granted")
+            setupVideoSDKEngine()
+            joinChannel()
+        }else{
+            requestCameraAndAudioPermission()
+        }
     }
 
     private fun initValues() {
@@ -172,7 +172,7 @@ class VideoCall : Fragment() {
         try {
             val config = RtcEngineConfig()
             config.mContext = context
-            config.mAppId = appId
+            config.mAppId = com.adreal.birdmessenger.Constants.Constants.agoraAppId
             config.mEventHandler = mRtcEventHandler
             agoraEngine = RtcEngine.create(config)
             agoraEngine!!.enableVideo()
@@ -252,7 +252,7 @@ class VideoCall : Fragment() {
         agoraEngine!!.startPreview()
         // Join the channel with a temp token.
         // You need to specify the user ID yourself, and ensure that it is unique in the channel.
-        agoraEngine!!.joinChannel(token, channelName, uid, options)
+        agoraEngine!!.joinChannel(com.adreal.birdmessenger.Constants.Constants.agoraToken, com.adreal.birdmessenger.Constants.Constants.agoraChannelName, uid, options)
     }
 
     private fun leaveChannel() {

@@ -12,4 +12,8 @@ object Constants {
     const val WORKER_TAG = "Upload"
     var isCallEnded: Boolean = false
     var isIntiatedNow : Boolean = true
+
+    const val agoraAppId = "489ab3de83944e87b7ffd278c4ccf35b"
+    const val agoraChannelName = "birdMessenger"
+    const val agoraToken = "007eJxTYAiWinnSd+ecyz7Vu4HFmzcl+jXlPEpx1tJkl56lk35sv7YCg4mFZWKScUqqhbGliUmqhXmSeVpaipG5RbJJcnKasWlS7nHZlIZARgZlvqWsjAwQCOLzMiRlFqX4phYXp+alpxYxMAAAJrohlQ==/PSU4sYGABUuyIy"
 }
