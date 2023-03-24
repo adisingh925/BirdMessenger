@@ -84,6 +84,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-perf-ktx'
 
     //agora
-    implementation 'io.agora.rtc:full-rtc-basic:3.6.2'
-//    implementation 'io.agora.rtc:full-sdk:4.0.1'
+    //implementation 'io.agora.rtc:full-rtc-basic:3.6.2'
+    implementation 'io.agora.rtc:full-sdk:4.0.1'
 }

@@ -18,11 +18,8 @@ import androidx.navigation.fragment.findNavController
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.ViewModel.VideoCallViewModel
 import com.adreal.birdmessenger.databinding.FragmentVideoCallBinding
-import io.agora.rtc.IRtcEngineEventHandler
-import io.agora.rtc.RtcEngine
-import io.agora.rtc.RtcEngineConfig
-import io.agora.rtc.models.ChannelMediaOptions
-import io.agora.rtc.video.VideoCanvas
+import io.agora.rtc2.*
+import io.agora.rtc2.video.VideoCanvas
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -256,9 +253,9 @@ class VideoCall : Fragment() {
     private fun joinChannel() {
         val options = ChannelMediaOptions()
         // For a Video call, set the channel profile as COMMUNICATION.
-//        options.channelProfile = Constants.CHANNEL_PROFILE_COMMUNICATION
+        options.channelProfile = Constants.CHANNEL_PROFILE_COMMUNICATION
         // Set the client role as BROADCASTER or AUDIENCE according to the scenario.
-//        options.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
+        options.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
         // Display LocalSurfaceView.
         setupLocalVideo()
         localSurfaceView!!.visibility = View.VISIBLE
@@ -266,7 +263,7 @@ class VideoCall : Fragment() {
         agoraEngine!!.startPreview()
         // Join the channel with a temp token.
         // You need to specify the user ID yourself, and ensure that it is unique in the channel.
-        agoraEngine!!.joinChannel(token, channelName,"hi", uid, options)
+        agoraEngine!!.joinChannel(token, channelName, uid, options)
     }
 
     private fun leaveChannel() {
