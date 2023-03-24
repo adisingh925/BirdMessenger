@@ -14,17 +14,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.adreal.birdmessenger.R
-import com.adreal.birdmessenger.ViewModel.VideoCallViewModel
 import com.adreal.birdmessenger.databinding.FragmentVideoCallBinding
 import io.agora.rtc2.*
 import io.agora.rtc2.video.VideoCanvas
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 
 class VideoCall : Fragment() {
 
@@ -36,12 +33,6 @@ class VideoCall : Fragment() {
         private const val CAMERA_AUDIO_PERMISSION_REQUEST_CODE = 1
         private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
         private const val AUDIO_PERMISSION = Manifest.permission.RECORD_AUDIO
-        const val TAG = "Video Call Fragment"
-    }
-
-
-    private val videoCallViewModel by lazy {
-        ViewModelProvider(this)[VideoCallViewModel::class.java]
     }
 
     lateinit var receiverId: String
@@ -80,12 +71,6 @@ class VideoCall : Fragment() {
 
         binding.switchCameraButton.setOnClickListener {
             agoraEngine?.switchCamera()
-        }
-
-        videoCallViewModel.readAllCalls.observe(viewLifecycleOwner) {
-            if (it.isNotEmpty()) {
-
-            }
         }
 
         binding.audioOutputButton.setOnClickListener {
@@ -180,6 +165,7 @@ class VideoCall : Fragment() {
 
     private fun onCameraAndAudioPermissionGranted(){
         setupVideoSDKEngine()
+        joinChannel()
     }
 
     private fun setupVideoSDKEngine() {
