@@ -73,7 +73,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         chatViewModel.getStatus(receiverId)
         chatViewModel.updateUnseenMessageCount(receiverId)
 
-        binding.toolbar.inflateMenu(R.menu.delete)
+        if(!chatViewModel.isToolbarInit){
+            binding.toolbar.inflateMenu(R.menu.delete)
+            chatViewModel.isToolbarInit = true
+        }
 
         binding.toolbar.setOnMenuItemClickListener()
         {
@@ -83,7 +86,6 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 }
 
                 R.id.video -> {
-//                    arguments?.putString("type","offerCandidate")
                     findNavController().navigate(R.id.action_chatFragment_to_videoCall,arguments)
                 }
             }

@@ -31,6 +31,7 @@ import retrofit2.Response
 class PeopleViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    var isToolbarInit = false
     private val firebaseInstallations = FirebaseInstallations.getInstance()
 
     fun storeNameAndImage(name: String, image: String) {

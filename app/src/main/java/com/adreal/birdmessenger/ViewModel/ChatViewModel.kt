@@ -34,6 +34,7 @@ import java.util.Base64
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val realtimeDatabase = Firebase.database
+    var isToolbarInit = false
     val liveData = MutableLiveData<String>()
 
     fun getStatus(receiverId: String) {

@@ -23,7 +23,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.adreal.birdmessenger.Activity.Info
 import com.adreal.birdmessenger.Adapter.PeopleAdapter
 import com.adreal.birdmessenger.Model.UserModel
 import com.adreal.birdmessenger.R
@@ -66,7 +65,11 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        binding.toolbar.inflateMenu(R.menu.toprightmenu)
+
+        if(!peopleViewModel.isToolbarInit){
+            binding.toolbar.inflateMenu(R.menu.toprightmenu)
+            peopleViewModel.isToolbarInit = true
+        }
 
         binding.fab.isEnabled = false
 
@@ -92,11 +95,6 @@ class PeopleFragment : Fragment(), PeopleAdapter.OnItemClickListener {
                     intent.putExtra(Intent.EXTRA_TEXT, SharedPreferences.read("installationId", ""))
                     intent.type = "text/*"
                     startActivity(Intent.createChooser(intent, "Share To:"))
-                }
-
-                R.id.info -> {
-                    val intent = Intent(context, Info::class.java)
-                    startActivity(intent)
                 }
             }
             true
