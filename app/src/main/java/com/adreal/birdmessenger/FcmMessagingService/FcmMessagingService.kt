@@ -122,7 +122,7 @@ class FcmMessagingService : FirebaseMessagingService() {
 
                                 Database.getDatabase(applicationContext).Dao().addChatData(chatData)
 
-                                if (SharedPreferences.read("MUTE-$senderId", "y") == "y") {
+                                if (SharedPreferences.read("MUTE-$senderId", "y") == "y" && SharedPreferences.read("onForeground","n") == "n") {
                                     val notificationManager = getSystemService(NotificationManager::class.java)
                                     prepareChatNotification(
                                         senderId,

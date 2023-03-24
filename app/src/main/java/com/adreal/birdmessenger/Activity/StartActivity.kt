@@ -38,7 +38,6 @@ class StartActivity : AppCompatActivity() {
         SharedPreferences.init(this)
 
         CoroutineScope(Dispatchers.IO).launch {
-            startActivityViewModel.dismissNotifications(this@StartActivity)
             Encryption().addBouncyCastleProvider()
             startActivityViewModel.saveInstallationId()
             startActivityViewModel.saveToken()
@@ -51,11 +50,14 @@ class StartActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        startActivityViewModel.dismissNotifications(this@StartActivity)
+        SharedPreferences.write("onForeground","y")
         startActivityViewModel.setStatus(1)
         super.onResume()
     }
 
     override fun onPause() {
+        SharedPreferences.write("onForeground","n")
         startActivityViewModel.setStatus(0)
         super.onPause()
     }
