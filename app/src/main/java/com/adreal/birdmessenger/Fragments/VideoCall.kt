@@ -293,9 +293,9 @@ class VideoCall : Fragment() {
     }
 
     private fun endCall(){
-        agoraEngine!!.stopPreview()
         leaveChannel()
         CoroutineScope(Dispatchers.IO).launch {
+            agoraEngine!!.stopPreview()
             RtcEngine.destroy()
             agoraEngine = null
         }
