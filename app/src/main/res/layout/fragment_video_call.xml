@@ -25,13 +25,13 @@
         app:layout_constraintBottom_toTopOf="@id/controls"/>
 
     <FrameLayout
-        android:layout_width="140dp"
+        android:layout_width="130dp"
         android:id="@+id/localView"
         app:layout_constraintBottom_toTopOf="@id/controls"
         app:layout_constraintLeft_toLeftOf="@id/controls"
         android:layout_marginBottom="20dp"
         android:layout_marginStart="20dp"
-        android:layout_height="170dp"/>
+        android:layout_height="150dp"/>
 
     <LinearLayout
         app:layout_constraintBottom_toBottomOf="parent"

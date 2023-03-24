@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.PermissionChecker.checkSelfPermission
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -49,7 +50,7 @@ class VideoCall : Fragment() {
 
     private val appId = "489ab3de83944e87b7ffd278c4ccf35b"
     private val channelName = "birdMessenger"
-    private val token = "007eJxTYEg65bDRd0tn6sHJ6uUdjgxPc1o0OzLntq3wcH1npsL64ZsCg4mFZWKScUqqhbGliUmqhXmSeVpaipG5RbJJcnKasWlS6xyZlIZARoZqD0FGRgYIBPF5GZIyi1J8U4uLU/PSU4sYGABUuyIy"
+    private val token = "007eJxTYAiWinnSd+ecyz7Vu4HFmzcl+jXlPEpx1tJkl56lk35sv7YCg4mFZWKScUqqhbGliUmqhXmSeVpaipG5RbJJcnKasWlS7nHZlIZARgZlvqWsjAwQCOLzMiRlFqX4phYXp+alpxYxMAAAJrohlQ==/PSU4sYGABUuyIy"
     private val uid = 0
     private var isJoined = false
     private var agoraEngine: RtcEngine? = null
@@ -116,7 +117,7 @@ class VideoCall : Fragment() {
         }
 
         binding.endCallButton.setOnClickListener {
-            leaveChannel()
+            endCall()
             findNavController().popBackStack()
         }
 
@@ -201,6 +202,7 @@ class VideoCall : Fragment() {
 
             // Set the remote video view
             CoroutineScope(Dispatchers.Main).launch {
+                binding.remoteViewLoading.isVisible = false
                 setupRemoteVideo(uid)
             }
         }
@@ -214,7 +216,8 @@ class VideoCall : Fragment() {
             showMessage("Remote user offline $uid $reason")
 
             CoroutineScope(Dispatchers.Main).launch {
-                remoteSurfaceView!!.visibility = View.GONE
+                endCall()
+                findNavController().popBackStack()
             }
         }
     }
@@ -222,7 +225,6 @@ class VideoCall : Fragment() {
     private fun setupRemoteVideo(uid: Int) {
         val container: FrameLayout = binding.remoteView
         remoteSurfaceView = SurfaceView(context)
-        remoteSurfaceView!!.setZOrderMediaOverlay(true)
         container.addView(remoteSurfaceView)
         agoraEngine!!.setupRemoteVideo(
             VideoCanvas(
@@ -239,6 +241,7 @@ class VideoCall : Fragment() {
         val container: FrameLayout = binding.localView
         // Create a SurfaceView object and add it as a child to the FrameLayout.
         localSurfaceView = SurfaceView(context)
+        localSurfaceView!!.setZOrderMediaOverlay(true)
         container.addView(localSurfaceView)
         // Call setupLocalVideo with a VideoCanvas having uid set to 0.
         agoraEngine!!.setupLocalVideo(
@@ -286,8 +289,12 @@ class VideoCall : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        endCall()
+    }
+
+    private fun endCall(){
         agoraEngine!!.stopPreview()
-        agoraEngine!!.leaveChannel()
+        leaveChannel()
         CoroutineScope(Dispatchers.IO).launch {
             RtcEngine.destroy()
             agoraEngine = null
