@@ -51,7 +51,7 @@ class Receiver : BroadcastReceiver() {
                 CoroutineScope(Dispatchers.IO).launch {
                     val remoteInput = RemoteInput.getResultsFromIntent(intent)
                     val senderId = intent.getStringExtra(FcmMessagingService.ID)
-                    val token = intent.getStringExtra(FcmMessagingService.TOKEN)
+                    val token = intent.getStringExtra(Constants.TOKEN)
                     val senderName = intent.getStringExtra(FcmMessagingService.SENDER_NAME)
                     if (remoteInput != null && senderId != null && token != null && senderName != null) {
                         val response = remoteInput.getCharSequence(FcmMessagingService.KEY_TEXT_REPLY).toString()
@@ -90,7 +90,7 @@ class Receiver : BroadcastReceiver() {
                 val senderId = intent.getStringExtra(FcmMessagingService.ID)
                 val notificationId = intent.getIntExtra(FcmMessagingService.NOTIFICATION_ID, -1)
                 val messages = intent.getLongArrayExtra(FcmMessagingService.MESSAGES)
-                val token = intent.getStringExtra(FcmMessagingService.TOKEN)
+                val token = intent.getStringExtra(Constants.TOKEN)
                 if (senderId != null && notificationId != -1 && messages != null && token != null) {
                     for (i in messages) {
                         if(i != "0".toLong()){

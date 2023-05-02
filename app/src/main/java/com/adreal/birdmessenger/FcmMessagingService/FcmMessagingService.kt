@@ -67,7 +67,6 @@ class FcmMessagingService : FirebaseMessagingService() {
         const val READ = "read"
         const val REPLY = "Reply"
         const val MESSAGES = "messages"
-        const val TOKEN = "token"
         const val SENDER_NAME = "name"
     }
 
@@ -166,29 +165,6 @@ class FcmMessagingService : FirebaseMessagingService() {
                     remoteMessage.data["id"].toString().toLong(),
                     applicationContext
                 )
-            }
-
-            "answerCandidate", "offerCandidate" -> {
-                val id = remoteMessage.data["id"]
-                val serverUrl = remoteMessage.data["serverUrl"]
-                val sdpMid = remoteMessage.data["sdpMid"]
-                val sdpMLineIndex = remoteMessage.data["sdpMLineIndex"]
-                val sdpCandidate = remoteMessage.data["sdpCandidate"]
-                val type = remoteMessage.data["category"]
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    Database.getDatabase(applicationContext).Dao()
-                        .addCallData(
-                            VideoCallModel(
-                                id!!,
-                                serverUrl!!,
-                                sdpMid!!,
-                                sdpMLineIndex!!,
-                                sdpCandidate!!,
-                                type!!
-                            )
-                        )
-                }
             }
         }
 
@@ -414,7 +390,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         readIntent.putExtra(ID, senderId)
         readIntent.putExtra(NOTIFICATION_ID, notificationId)
         readIntent.putExtra(MESSAGES, subArray)
-        readIntent.putExtra(TOKEN, senderToken)
+        readIntent.putExtra(Constants.TOKEN, senderToken)
         val pendingReadIntent = PendingIntent.getBroadcast(
             context, notificationId * 2, readIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -436,7 +412,7 @@ class FcmMessagingService : FirebaseMessagingService() {
         val resultIntent = Intent(context, Receiver::class.java)
         resultIntent.action = REMOTE_INPUT
         resultIntent.putExtra(ID, senderId)
-        resultIntent.putExtra(TOKEN, senderToken)
+        resultIntent.putExtra(Constants.TOKEN, senderToken)
         resultIntent.putExtra(SENDER_NAME, senderName)
 
         val resultPendingIntent = PendingIntent.getBroadcast(
