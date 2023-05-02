@@ -82,8 +82,5 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.69'
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-perf-ktx'
-
-    //agora
-    //implementation 'io.agora.rtc:full-rtc-basic:3.6.2'
     implementation 'io.agora.rtc:full-sdk:4.0.1'
 }
