@@ -1,12 +1,13 @@
 package com.adreal.birdmessenger.Activity
 
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import com.adreal.birdmessenger.Constants.Constants
+import com.adreal.birdmessenger.Constants.Constants.NO
+import com.adreal.birdmessenger.Constants.Constants.YES
 import com.adreal.birdmessenger.Encryption.Encryption
 import com.adreal.birdmessenger.R
 import com.adreal.birdmessenger.SharedPreferences.SharedPreferences
@@ -15,8 +16,6 @@ import com.adreal.birdmessenger.databinding.ActivityStartBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.Security
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.P)
@@ -51,14 +50,21 @@ class StartActivity : AppCompatActivity() {
 
     override fun onResume() {
         startActivityViewModel.dismissNotifications(this@StartActivity)
-        SharedPreferences.write("onForeground","y")
-        startActivityViewModel.setStatus(1)
+        changeCurrentState(YES)
         super.onResume()
     }
 
     override fun onPause() {
-        SharedPreferences.write("onForeground","n")
-        startActivityViewModel.setStatus(0)
+        changeCurrentState(NO)
         super.onPause()
+    }
+
+    private fun changeCurrentState(state : String){
+        SharedPreferences.write(Constants.ON_FOREGROUND,state)
+        if(state == NO){
+            startActivityViewModel.setStatus(0)
+        }else{
+            startActivityViewModel.setStatus(1)
+        }
     }
 }
