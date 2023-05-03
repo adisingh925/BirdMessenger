@@ -83,4 +83,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-perf-ktx'
     implementation 'io.agora.rtc:full-sdk:4.0.1'
+    implementation("androidx.paging:paging-runtime:3.1.1")
 }

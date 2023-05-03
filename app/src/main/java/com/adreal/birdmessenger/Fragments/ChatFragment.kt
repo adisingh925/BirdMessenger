@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,9 +15,11 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.adreal.birdmessenger.Activity.StartActivity
 import com.adreal.birdmessenger.Adapter.ChatAdapter
+import com.adreal.birdmessenger.Constants.Constants
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.FcmMessagingService.FcmMessagingService
 import com.adreal.birdmessenger.Model.ChatModel
@@ -43,7 +46,13 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     }
 
     private val adapter by lazy {
-        context?.let { ChatAdapter(it, this) }
+        context?.let {
+            ChatAdapter(
+                it,
+                this,
+                SharedPreferences.read(Constants.INSTALLATION_ID, Constants.BLANK).toString()
+            )
+        }
     }
 
     private val recyclerView by lazy {
@@ -52,6 +61,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
     private val chatViewModel by lazy {
         ViewModelProvider(this)[ChatViewModel::class.java]
+    }
+
+    private val linearLayoutManager by lazy {
+        LinearLayoutManager(context)
     }
 
     lateinit var receiverId: String
@@ -73,7 +86,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         chatViewModel.getStatus(receiverId)
         chatViewModel.updateUnseenMessageCount(receiverId)
 
-        if(!chatViewModel.isToolbarInit){
+        if (!chatViewModel.isToolbarInit) {
             binding.toolbar.inflateMenu(R.menu.delete)
             chatViewModel.isToolbarInit = true
         }
@@ -86,7 +99,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 }
 
                 R.id.video -> {
-                    findNavController().navigate(R.id.action_chatFragment_to_videoCall,arguments)
+                    findNavController().navigate(R.id.action_chatFragment_to_videoCall, arguments)
                 }
             }
             true
@@ -114,19 +127,14 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
         offlineViewModel.readAllMessages(senderId, receiverId).observe(viewLifecycleOwner)
         {
-            if (it.size > listSizeCount) {
-                listSizeCount = it.size
-                adapter?.setData(it, senderId)
-                recyclerView.scrollToPosition(it.size - 1)
-            } else {
-                adapter?.setData(it, senderId)
-            }
+            adapter?.submitData(lifecycle, it)
         }
 
         recyclerView.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
             if (bottom < oldBottom) {
-                if (listSizeCount >= 1)
-                    recyclerView.smoothScrollToPosition(listSizeCount - 1)
+                recyclerView.post {
+                    recyclerView.smoothScrollToPosition(0)
+                }
             }
         }
 
@@ -136,19 +144,21 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 "1" -> {
                     binding.toolbar.subtitle = "Online"
                 }
+
                 "2" -> {
                     binding.toolbar.subtitle = "Typing..."
                 }
+
                 else -> {
                     binding.toolbar.subtitle = ""
                 }
             }
         }
 
-        chatViewModel.mockLiveStatus.observe(viewLifecycleOwner){
-            if(it){
+        chatViewModel.mockLiveStatus.observe(viewLifecycleOwner) {
+            if (it) {
                 (activity as StartActivity).startActivityViewModel.setStatus(2)
-            }else{
+            } else {
                 (activity as StartActivity).startActivityViewModel.setStatus(1)
             }
         }
@@ -172,7 +182,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
                 )
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    context?.let { it1 -> SendPayload.sendMsg(chatData,receiverToken, it1, 1) }
+                    context?.let { it1 -> SendPayload.sendMsg(chatData, receiverToken, it1, 1) }
                     context?.let { it1 -> SendPayload.storeMsg(chatData, it1) }
                 }
             }
@@ -183,7 +193,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
 
     private fun initRecycler() {
         recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        linearLayoutManager.reverseLayout = true
+        linearLayoutManager.stackFromEnd = true
+        linearLayoutManager.isSmoothScrollbarEnabled = true
+        recyclerView.layoutManager = linearLayoutManager
     }
 
     private fun initValues() {
@@ -200,7 +213,8 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         if (data.senderId == receiverId) {
             CoroutineScope(Dispatchers.IO).launch {
                 context?.let {
-                    FcmMessagingService().createJson(3,"seen",data.messageId,receiverToken,
+                    FcmMessagingService().createJson(
+                        3, "seen", data.messageId, receiverToken,
                         it
                     )
                 }
@@ -212,8 +226,10 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
         val builder = context?.let { AlertDialog.Builder(it) }
         builder?.setPositiveButton("Yes") { _, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                Database.getDatabase(requireContext()).Dao().deleteAllChatsBetweenUsers(SharedPreferences.read("installationId", "").toString(), receiverId)
-                Database.getDatabase(requireContext()).Dao().updateLastMessage("",0,receiverId)
+                Database.getDatabase(requireContext()).Dao().deleteAllChatsBetweenUsers(
+                    SharedPreferences.read("installationId", "").toString(), receiverId
+                )
+                Database.getDatabase(requireContext()).Dao().updateLastMessage("", 0, receiverId)
             }
         }
         builder?.setNegativeButton("No") { _, _ ->

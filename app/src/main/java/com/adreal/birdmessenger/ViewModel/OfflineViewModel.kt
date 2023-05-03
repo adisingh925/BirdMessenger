@@ -5,16 +5,23 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.work.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.liveData
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.adreal.birdmessenger.Database.Database
 import com.adreal.birdmessenger.Model.ChatModel
 import com.adreal.birdmessenger.Model.UserModel
 import com.adreal.birdmessenger.Repository.Repository
 import com.adreal.birdmessenger.Worker.UploadWorker
-import com.google.firebase.firestore.auth.User
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.launch
+
 
 class OfflineViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -22,7 +29,7 @@ class OfflineViewModel(application: Application) : AndroidViewModel(application)
 
     val readAllUsers : LiveData<List<UserModel>>
 
-    val imageLiveData = MutableLiveData<String>()
+    private val imageLiveData = MutableLiveData<String>()
 
     init {
         val dao = Database.getDatabase(application).Dao()
@@ -30,9 +37,12 @@ class OfflineViewModel(application: Application) : AndroidViewModel(application)
         readAllUsers = repository.readAllUsers
     }
 
-    fun readAllMessages(senderId : String, receiverId : String) : LiveData<List<ChatModel>>
+    fun readAllMessages(senderId : String, receiverId : String) : LiveData<PagingData<ChatModel>>
     {
-        return repository.readAllMessages(senderId,receiverId)
+        return Pager(
+            PagingConfig(20,enablePlaceholders = false),
+            pagingSourceFactory = repository.readAllMessages(senderId,receiverId).asPagingSourceFactory(Dispatchers.IO)
+        ).liveData
     }
 
     fun addChatData(data : ChatModel)

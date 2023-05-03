@@ -1,6 +1,7 @@
 package com.adreal.birdmessenger.Dao
 
 import androidx.lifecycle.LiveData
+import androidx.paging.DataSource
 import androidx.room.*
 import androidx.room.Dao
 import com.adreal.birdmessenger.Model.ChatModel
@@ -34,8 +35,8 @@ interface Dao {
     @Update
     fun updateUserData(data : UserModel)
 
-    @Query("select * from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId order by sendTime asc")
-    fun readAllMessages(senderId: String,receiverId : String) : LiveData<List<ChatModel>>
+    @Query("select * from message where senderId = :senderId and receiverId = :receiverId or senderId = :receiverId and receiverId = :senderId order by sendTime desc")
+    fun readAllMessages(senderId: String,receiverId : String) : DataSource.Factory<Int, ChatModel>
 
     @Query("select * from user order by lastMessageTimeStamp desc")
     fun readAllUsers() : LiveData<List<UserModel>>
