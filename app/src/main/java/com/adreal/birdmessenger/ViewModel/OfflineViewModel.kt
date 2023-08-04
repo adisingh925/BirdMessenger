@@ -25,9 +25,9 @@ import kotlinx.coroutines.launch
 
 class OfflineViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository : Repository
+    private val repository: Repository
 
-    val readAllUsers : LiveData<List<UserModel>>
+    val readAllUsers: LiveData<List<UserModel>>
 
     private val imageLiveData = MutableLiveData<String>()
 
@@ -37,58 +37,55 @@ class OfflineViewModel(application: Application) : AndroidViewModel(application)
         readAllUsers = repository.readAllUsers
     }
 
-    fun readAllMessages(senderId : String, receiverId : String) : LiveData<PagingData<ChatModel>>
-    {
+    fun readAllMessages(senderId: String, receiverId: String): LiveData<PagingData<ChatModel>> {
         return Pager(
-            PagingConfig(20,enablePlaceholders = false),
-            pagingSourceFactory = repository.readAllMessages(senderId,receiverId).asPagingSourceFactory(Dispatchers.IO)
+            PagingConfig(20, enablePlaceholders = false),
+            pagingSourceFactory = repository.readAllMessages(senderId, receiverId)
+                .asPagingSourceFactory(Dispatchers.IO)
         ).liveData
     }
 
-    fun addChatData(data : ChatModel)
-    {
+    fun addChatData(data: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addChatData(data)
         }
     }
 
-    fun addNewUser(data : UserModel)
-    {
+    fun addNewUser(data: UserModel) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addNewUser(data)
         }
     }
 
-    fun updateChatData(data : ChatModel)
-    {
+    fun updateChatData(data: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateChatData(data)
         }
     }
 
-    fun updateUserCardData(userId : String)
-    {
+    fun updateUserCardData(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             Database.getDatabase(getApplication()).Dao().updateUserCardData(userId)
         }
     }
 
-    fun initUserImage(userId : String)
-    {
+    fun initUserImage(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            imageLiveData.postValue(Database.getDatabase(getApplication()).Dao().getImageData(userId))
+            imageLiveData.postValue(
+                Database.getDatabase(getApplication()).Dao().getImageData(userId)
+            )
         }
     }
 
-    fun setupWorkManager()
-    {
+    fun setupWorkManager() {
         viewModelScope.launch(Dispatchers.IO) {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .setRequiresCharging(false)
                 .build()
 
-            val uploadWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<UploadWorker>().setConstraints(constraints).build()
+            val uploadWorkRequest: WorkRequest =
+                OneTimeWorkRequestBuilder<UploadWorker>().setConstraints(constraints).build()
 
             WorkManager
                 .getInstance(getApplication())

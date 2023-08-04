@@ -70,7 +70,6 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
     lateinit var receiverId: String
     lateinit var receiverToken: String
     lateinit var receiverName: String
-    private var listSizeCount = 0
     lateinit var senderId: String
     var fromNotification = false
 
@@ -125,8 +124,7 @@ class ChatFragment : Fragment(), ChatAdapter.OnItemSeenListener {
             chatViewModel.startTyping(binding.edittext.text.toString())
         }
 
-        offlineViewModel.readAllMessages(senderId, receiverId).observe(viewLifecycleOwner)
-        {
+        offlineViewModel.readAllMessages(senderId, receiverId).observe(viewLifecycleOwner) {
             adapter?.submitData(lifecycle, it)
         }
 

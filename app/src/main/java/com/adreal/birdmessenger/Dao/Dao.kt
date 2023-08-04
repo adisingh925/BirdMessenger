@@ -68,7 +68,7 @@ interface Dao {
     @Query("select count(messageStatus) from message where senderId = :senderId and messageStatus = 2")
     fun readNumberOfDeliveredMessagesForUser(senderId: String) : Int
 
-    @Query("update message set messageStatus = :status where messageId = :id")
+    @Query("update message set messageStatus = :status where rowid = :id")
     fun updateMessageStatus(status : Int,id : Long)
 
     @Query("update user set unreadMessages = null where Id = :uid")
@@ -89,6 +89,6 @@ interface Dao {
     @Query("select userName from user where Id = :uid")
     fun getUserName(uid : String) : String
 
-    @Query("select * from message where messageId = :mid")
+    @Query("select * from message where rowid = :mid")
     fun getMessage(mid : Long) : ChatModel
 }
